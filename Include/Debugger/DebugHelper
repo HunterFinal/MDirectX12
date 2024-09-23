@@ -13,6 +13,11 @@ Version : alpha_1.0.0
 
 #pragma once
 
-#include <Debug.hpp>
+#ifndef _DEBUG_HELPER
+#define _DEBUG_HELPER
+
+#include <Debug.h>
 
 MDebug::Debug Debug;
+
+#endif // _DEBUG_HELPER

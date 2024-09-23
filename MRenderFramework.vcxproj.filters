@@ -5,22 +5,24 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="ヘッダー ファイル">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="リソース ファイル">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="Source">
       <UniqueIdentifier>{c8f8e499-2fb6-49fd-8435-5efc4fb01b99}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\Debug">
-      <UniqueIdentifier>{8ca9b578-3f11-4715-8c4d-4d6d9a231a66}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source\Debug">
       <UniqueIdentifier>{1c88a74e-bcb5-42b4-ae1b-4b972b06815d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header File">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header File\Debug">
+      <UniqueIdentifier>{8ca9b578-3f11-4715-8c4d-4d6d9a231a66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Window">
+      <UniqueIdentifier>{64acd598-4de6-47a3-8b1f-926cb47ad488}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header File\Window">
+      <UniqueIdentifier>{c4356a64-89f3-411f-9981-489809bdb44a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -30,21 +32,30 @@
     <ClCompile Include="Source\Debugger\Debug.cpp">
       <Filter>Source\Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Debugger\DebugFormat.cpp">
+    <ClCompile Include="Source\Window\BaseWindow.cpp">
+      <Filter>Source\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Debugger\DefaultLogger.cpp">
       <Filter>Source\Debug</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Include\Debugger\Debug.hpp">
-      <Filter>ヘッダー ファイル\Debug</Filter>
+    <ClInclude Include="Include\Debugger\Debug.h">
+      <Filter>Header File\Debug</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Debugger\DebugFormat.h">
-      <Filter>ヘッダー ファイル\Debug</Filter>
+    <ClInclude Include="Include\Debugger\ILogger.h">
+      <Filter>Header File\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Debugger\DefaultLogger.h">
+      <Filter>Header File\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Window\BaseWindow.h">
+      <Filter>Header File\Window</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Include\Debugger\DebugHelper">
-      <Filter>ヘッダー ファイル\Debug</Filter>
+      <Filter>Header File\Debug</Filter>
     </None>
   </ItemGroup>
 </Project>
