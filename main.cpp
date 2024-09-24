@@ -302,6 +302,56 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         { 1.f, -1.f, 0.f},  // 右下
     };
 
+    // 頂点バッファー作成
+    // ID3D12Device::CreateCommitedResource()を使う
+    D3D12_HEAP_PROPERTIES heapProperties = {};
+
+    heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;                       // CPUからアクセスできる（Mapできる）※DEFAULTより遅い
+    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;   // TypeはCUSTOMじゃないためUNKNOWNでよい
+    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;    // TypeはCUSTOMじゃないためUNKNOWNでよい
+
+    // 頂点バッファー
+    D3D12_RESOURCE_DESC resourceDesc = {};
+
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;       // バッファーに使うためBUFFERを指定
+    resourceDesc.Width = sizeof(vertices);                          // 頂点情報が入るだけのサイズ
+    resourceDesc.Height = 1;                                        // 幅で表現しているので１とする
+    resourceDesc.DepthOrArraySize = 1;                              // 1でよい
+    resourceDesc.MipLevels = 1;                                     // 1でよい
+    resourceDesc.Format = DXGI_FORMAT_UNKNOWN;                      // 今回は画像ではないためUNKNOWNでよい
+    resourceDesc.SampleDesc.Count = 1;                              // アンチエイリアシングを行うときのパラメーター。※ 0だとデータがないことになってしまうため、1にする
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;           // UNKNOWNと指定すると、自動で最適なレイアウトに設定しようとする　※今回はテクスチャではないため不適切です
+    resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;                  // NONEでよい※要調べ
+
+    ID3D12Resource* _vertBuffer = nullptr;
+
+    if(FAILED(_device->CreateCommittedResource( &heapProperties,
+                                                D3D12_HEAP_FLAG_NONE,
+                                                &resourceDesc,
+                                                D3D12_RESOURCE_STATE_GENERIC_READ,
+                                                nullptr,
+                                                IID_PPV_ARGS(&_vertBuffer))))
+    {
+        return -1;
+    }
+
+    // 頂点情報のコピー(マップ)
+    // コピーしないとGPUに渡すことができない
+    DirectX::XMFLOAT3* _vertMap = nullptr;
+
+    // ID3D12Resource::Mapメソッド
+    // 第一引数: ミップマップなどではないため0でよい　  ※リソース配列やミップマップの場合、サブリソース番号を渡す
+    // 第二引数: 範囲指定。全範囲なのでnullptrでよい   ※一部のみを更新したいときは設定する
+    // 第三引数: 受け取るためのポインター変数のアドレス
+    if(FAILED(_vertBuffer->Map(0, nullptr, reinterpret_cast<void**>(&_vertMap))))
+    {
+        return -1;
+    }
+
+    std::copy(std::begin(vertices), std::end(vertices), _vertMap);
+
+    _vertBuffer->Unmap(0, nullptr);
+
     while(true)
     {
         if (PeekMessage(&msg,nullptr,0,0,PM_REMOVE))
@@ -374,7 +424,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         if(_fence->GetCompletedValue() != _fenceVal)
         {
             // イベントハンドルの取得
-            auto event = CreateEvent(nullptr, false, false, nullptr);
+            HANDLE event = CreateEvent(nullptr, false, false, nullptr);
 
             _fence->SetEventOnCompletion(_fenceVal, event);
 
