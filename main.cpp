@@ -30,6 +30,13 @@ Version : alpha_1.0.0
 
 // end DX12 include
 
+// shader compiler include
+#include <d3dcompiler.h>
+
+#pragma comment(lib,"d3dcompiler.lib")
+
+// end shader compiler include
+
 #include <vector>
 #include <string>
 
@@ -352,6 +359,109 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     _vertBuffer->Unmap(0, nullptr);
 
+    // 頂点バッファービューを作成
+    D3D12_VERTEX_BUFFER_VIEW _vertexBufferView = {};
+
+    _vertexBufferView.BufferLocation = _vertBuffer->GetGPUVirtualAddress(); // バッファーの仮想アドレス
+    _vertexBufferView.SizeInBytes = sizeof(vertices);                       // 頂点の全バイト数
+    _vertexBufferView.StrideInBytes = sizeof(vertices[0]);                  // 一頂点あたりのバイト数
+
+    // 頂点バッファービューを設定
+    // 第一引数:※頂点バッファーの設定を開始するには、デバイスの 0 から始まる配列にインデックスを作成します。
+    // 第二引数:渡す頂点バッファービューの数
+    // 第三引数:頂点バッファービューの配列の先頭アドレス
+    _cmdList->IASetVertexBuffers(0, 1, &_vertexBufferView);
+
+    // Shaderオブジェクトを作成
+    // ID3DBlobは　Binary Large Objectの略称、「何かのデータの塊」として使われている「汎用型」のオブジェクトです
+    ID3DBlob* _vertexShaderBlob = nullptr;
+    ID3DBlob* _pixelShaderBlob = nullptr;
+
+    // エラーメッセージが入っているBlob
+    ID3DBlob* _errorBlob = nullptr;
+
+    const std::wstring VERTEX_SHADER = L"Shaders/HLSLs/BasicVertexShader.hlsl";
+    const std::wstring PIXEL_SHADER = L"Shaders/HLSLs/BasicPixelShader.hlsl";
+    const UINT SHADER_COMPILE_OPTION = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;  // デバッグ用および最適化なし
+
+    // 頂点シェーダー作成
+
+    result = D3DCompileFromFile(
+                                    VERTEX_SHADER.c_str(),              // シェーダーファイル名
+                                    nullptr,                            // #defineを配列で指定するための引数
+                                    D3D_COMPILE_STANDARD_FILE_INCLUDE,  // shaderの中#includeが書かれているとき、インクルードファイルのディレクトリとしてカレントディレクトリを参照（#includeを使わないときはnullptrでよい）
+                                    "BasicVS",                          // エントリーポイント
+                                    "vs_5_0",                           // シェーダーモデルバージョン
+                                    SHADER_COMPILE_OPTION,              // シェーダーコンパイルオプション
+                                    0,                                  // エフェクトコンパイルオプション（シェーダーファイルの場合０が推奨）
+                                    &_vertexShaderBlob,                 // 受け取るためのポインターのアドレス
+                                    &_errorBlob                         // エラー用ポインターのアドレス
+    );
+
+    if (FAILED(result))
+    {
+        if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+        {
+            ::OutputDebugStringW(L"*****ERROR***** ファイルが見当たりません。\n");
+        }
+        else
+        {
+            std::string errMsg;
+            errMsg.resize(_errorBlob->GetBufferSize());
+            std::copy_n(static_cast<char*>(_errorBlob->GetBufferPointer()), _errorBlob->GetBufferSize(), errMsg.begin());
+
+            OutputDebugStringA(errMsg.c_str());
+        }
+
+        return -1;
+    }
+
+    // ピクセルシェーダー作成
+    result = D3DCompileFromFile(
+                                    PIXEL_SHADER.c_str(),               // シェーダーファイル名
+                                    nullptr,                            // #defineを配列で指定するための引数
+                                    D3D_COMPILE_STANDARD_FILE_INCLUDE,  // shaderの中#includeが書かれているとき、インクルードファイルのディレクトリとしてカレントディレクトリを参照（#includeを使わないときはnullptrでよい）
+                                    "BasicPS",                          // エントリーポイント
+                                    "ps_5_0",                           // シェーダーモデルバージョン
+                                    SHADER_COMPILE_OPTION,              // シェーダーコンパイルオプション
+                                    0,                                  // エフェクトコンパイルオプション（シェーダーファイルの場合０が推奨）
+                                    &_pixelShaderBlob,                  // 受け取るためのポインターのアドレス
+                                    &_errorBlob                         // エラー用ポインターのアドレス
+                               );
+
+    if (FAILED(result))
+    {
+        if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+        {
+            ::OutputDebugStringW(L"*****ERROR***** ファイルが見当たりません。\n");
+        }
+        else
+        {
+            std::string errMsg;
+            errMsg.resize(_errorBlob->GetBufferSize());
+            std::copy_n(static_cast<char*>(_errorBlob->GetBufferPointer()), _errorBlob->GetBufferSize(), errMsg.begin());
+
+            ::OutputDebugStringA(errMsg.c_str());
+        }
+
+        return -1;
+    }
+
+    // 頂点レイアウト作成
+    // 渡される頂点データなどをどのように解釈するかをGPUに教えてあげるため
+    D3D12_INPUT_ELEMENT_DESC _inputLayout[] = 
+    {
+        {
+            "Position",                                 // セマンティクス名(今回は座標なのでPOSITION)
+            0,                                          // 同じセマンティクス名のときに使うインデックス(0でよい) ※要調べ
+            DXGI_FORMAT_R32G32B32_FLOAT,                // フォーマット(データの解釈(float3のため,rbg毎に32bit,float型))
+            0,                                          // 入力スロットインデックス(0でよい)IASetVertexBuffersでスロットとバッファーとを関連付けている
+            D3D12_APPEND_ALIGNED_ELEMENT,               // データが連続していることを表す定義としてALIGNED_ELEMENT
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, // データの内容として、1頂点ごとにこのレイアウトが入っているを表す列挙※13.2.2で説明するらしい
+            0                                           // 一度に描画するインスタンスの数(インスタンシングを使わないため0でよい)※13.2.2で説明するらしい
+        },
+    };
+
     while(true)
     {
         if (PeekMessage(&msg,nullptr,0,0,PM_REMOVE))
@@ -425,6 +535,11 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         {
             // イベントハンドルの取得
             HANDLE event = CreateEvent(nullptr, false, false, nullptr);
+
+            if (event == nullptr)
+            {
+                return -1;
+            }
 
             _fence->SetEventOnCompletion(_fenceVal, event);
 

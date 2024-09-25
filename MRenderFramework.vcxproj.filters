@@ -24,6 +24,12 @@
     <Filter Include="Header File\Window">
       <UniqueIdentifier>{c4356a64-89f3-411f-9981-489809bdb44a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{af005048-32eb-4eac-8406-cc6975671ac9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\HLSL">
+      <UniqueIdentifier>{05787bac-5b0c-4784-a80d-23b8d3949f6c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -57,5 +63,13 @@
     <None Include="Include\Debugger\DebugHelper">
       <Filter>Header File\Debug</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\HLSLs\BasicVertexShader.hlsl">
+      <Filter>Shader\HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\HLSLs\BasicPixelShader.hlsl">
+      <Filter>Shader\HLSL</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
