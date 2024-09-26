@@ -5,21 +5,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source">
-      <UniqueIdentifier>{c8f8e499-2fb6-49fd-8435-5efc4fb01b99}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\Debug">
-      <UniqueIdentifier>{1c88a74e-bcb5-42b4-ae1b-4b972b06815d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header File">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Header File\Debug">
-      <UniqueIdentifier>{8ca9b578-3f11-4715-8c4d-4d6d9a231a66}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\Window">
-      <UniqueIdentifier>{64acd598-4de6-47a3-8b1f-926cb47ad488}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header File\Window">
       <UniqueIdentifier>{c4356a64-89f3-411f-9981-489809bdb44a}</UniqueIdentifier>
@@ -30,38 +18,71 @@
     <Filter Include="Shader\HLSL">
       <UniqueIdentifier>{05787bac-5b0c-4784-a80d-23b8d3949f6c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header File\Debugger">
+      <UniqueIdentifier>{8ca9b578-3f11-4715-8c4d-4d6d9a231a66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header File\Graphics_DX12">
+      <UniqueIdentifier>{dc5faf8c-4f09-414f-b088-f1f2713fdab5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Obsolete Code">
+      <UniqueIdentifier>{d7a9d556-761b-406b-9b64-e93bc6448399}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source File">
+      <UniqueIdentifier>{c8f8e499-2fb6-49fd-8435-5efc4fb01b99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source File\Window">
+      <UniqueIdentifier>{64acd598-4de6-47a3-8b1f-926cb47ad488}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source File\Debugger">
+      <UniqueIdentifier>{1c88a74e-bcb5-42b4-ae1b-4b972b06815d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source File\Graphics_DX12">
+      <UniqueIdentifier>{a30a37cb-2ba8-483c-9b68-83a78a78029d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Source\Debugger\Debug.cpp">
-      <Filter>Source\Debug</Filter>
+      <Filter>Source File\Debugger</Filter>
     </ClCompile>
     <ClCompile Include="Source\Window\BaseWindow.cpp">
-      <Filter>Source\Window</Filter>
+      <Filter>Source File\Window</Filter>
     </ClCompile>
     <ClCompile Include="Source\Debugger\DefaultLogger.cpp">
-      <Filter>Source\Debug</Filter>
+      <Filter>Source File\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Debugger\DebugHelper.cpp">
+      <Filter>Source File\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\Fence.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Debugger\Debug.h">
-      <Filter>Header File\Debug</Filter>
+      <Filter>Header File\Debugger</Filter>
     </ClInclude>
     <ClInclude Include="Include\Debugger\ILogger.h">
-      <Filter>Header File\Debug</Filter>
+      <Filter>Header File\Debugger</Filter>
     </ClInclude>
     <ClInclude Include="Include\Debugger\DefaultLogger.h">
-      <Filter>Header File\Debug</Filter>
+      <Filter>Header File\Debugger</Filter>
     </ClInclude>
     <ClInclude Include="Include\Window\BaseWindow.h">
       <Filter>Header File\Window</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\Fence.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Obsolete Code\ObsoleteCode.h">
+      <Filter>Obsolete Code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Include\Debugger\DebugHelper">
-      <Filter>Header File\Debug</Filter>
+      <Filter>Header File\Debugger</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

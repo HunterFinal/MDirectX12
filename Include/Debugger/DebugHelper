@@ -18,6 +18,6 @@ Version : alpha_1.0.0
 
 #include <Debug.h>
 
-MDebug::Debug Debug;
+extern MDebug::Debug Debug;
 
 #endif // _DEBUG_HELPER

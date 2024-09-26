@@ -40,15 +40,26 @@ Version : alpha_1.0.0
 #include <vector>
 #include <string>
 
+#pragma region DX12 Wrapper
+
+#include <Graphics_DX12/Fence.h>
+
+#pragma endregion
+// end region of DX12 Wrapper
+
 #ifdef _DEBUG
 int main()
 #else
 int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 #endif
 {
-
     // Window
     MWindow::Window test;
+
+    if(!test.InitWnd(1920, 1080, L"GameWindow", L"Framework_Window_Title"))
+    {
+        return -1;
+    }
 
     #pragma region D3D12 DebugLayer
 
@@ -224,7 +235,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     // TODO 大事
     // 本来はQueryInterfaceなどを用いて IDXGISwapChain4*への変換チェックをするが、わかりやすさ重視のためキャストで対応
-    result = _dxgiFactory->CreateSwapChainForHwnd(_cmdQueue, test.GetHandle(), &swapChainDesc, nullptr, nullptr, (IDXGISwapChain1**) &_swapChain);
+    result = _dxgiFactory->CreateSwapChainForHwnd(_cmdQueue, test.GetHWND(), &swapChainDesc, nullptr, nullptr, (IDXGISwapChain1**) &_swapChain);
 
     // 生成失敗
     if(result != S_OK)
@@ -287,18 +298,16 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     #pragma region D3D12 Fence
     // GPU側の処理が完了したかどうかを知るための仕組み
-    ID3D12Fence* _fence = nullptr;
-    UINT64 _fenceVal = 0;
 
-    result = _device->CreateFence(_fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
+    MFramework::MGraphics_DX12::Fence fence;
+
+    fence.Init(_device);
+
     #pragma endregion
     // end region of D3D12 Fence
     // D3D12に使う定数
     // RTVのインクリメントサイズ
     const UINT RTV_INCREMENT_SIZE = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-
-    MSG msg = {};
 
     // 頂点座標
     // ※時計回り
@@ -654,6 +663,9 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     _scissorRect.bottom = _scissorRect.top + 1080;
 
     UINT frame = 0;
+
+    MSG msg = {};
+
     #pragma region Main Loop
     // メインループ
     while(true)
@@ -668,7 +680,6 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         {
             break;
         }
-
 
         // レンダーターゲットビューのインデックス取得
         UINT backBufferIndex = _swapChain->GetCurrentBackBufferIndex();
@@ -758,26 +769,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         _cmdQueue->ExecuteCommandLists(1, cmdLists);
 
         // フェンスを使ってGPUの処理が終わるまで待つ
-        _cmdQueue->Signal(_fence, ++_fenceVal);
-
-        if(_fence->GetCompletedValue() != _fenceVal)
-        {
-            // イベントハンドルの取得
-            HANDLE event = CreateEvent(nullptr, false, false, nullptr);
-
-            if (event == nullptr)
-            {
-                return -1;
-            }
-
-            _fence->SetEventOnCompletion(_fenceVal, event);
-
-            // イベントが発生するまで待ち続ける
-            WaitForSingleObject(event, INFINITE);
-
-            // イベントハンドルを閉じる
-            CloseHandle(event);
-        }
+        fence.WaitSingle(_cmdQueue);
 
         // リセットし、命令オブジェクトをためていく
         // コマンドリストのクローズ状態を解除
@@ -797,6 +789,8 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     } 
     #pragma endregion
     // end region of Main Loop
+
+    test.Term();
 
     return 0;
 }

@@ -77,7 +77,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)/Include;$(SolutionDir)/Include/Debugger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/Include;$(SolutionDir)/Include/Debugger;</AdditionalIncludeDirectories>
       <AdditionalOptions>/source-charset:utf-8 /execution-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -94,6 +94,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)/Include;$(SolutionDir)/Include/Debugger;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -109,7 +110,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)/Include;$(SolutionDir)/Include/Debugger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/Include;$(SolutionDir)/Include/Debugger;</AdditionalIncludeDirectories>
       <AdditionalOptions>/source-charset:utf-8 /execution-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -126,6 +127,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)/Include;$(SolutionDir)/Include/Debugger;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,14 +139,18 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source\Debugger\Debug.cpp" />
+    <ClCompile Include="Source\Debugger\DebugHelper.cpp" />
     <ClCompile Include="Source\Debugger\DefaultLogger.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\Fence.cpp" />
     <ClCompile Include="Source\Window\BaseWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Debugger\Debug.h" />
     <ClInclude Include="Include\Debugger\DefaultLogger.h" />
     <ClInclude Include="Include\Debugger\ILogger.h" />
+    <ClInclude Include="Include\Graphics_DX12\Fence.h" />
     <ClInclude Include="Include\Window\BaseWindow.h" />
+    <ClInclude Include="Obsolete Code\ObsoleteCode.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Include\Debugger\DebugHelper" />

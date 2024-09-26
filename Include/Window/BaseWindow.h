@@ -17,6 +17,7 @@ Version : alpha_1.0.0
 #define _M_WINDOW
 
 #include <Windows.h>
+#include <string>
 
 namespace MWindow
 {
@@ -27,22 +28,39 @@ namespace MWindow
             ~Window();
             
         public:
-            HWND GetHandle();
+            bool InitWnd(UINT32 width, UINT32 height, const wchar_t* className, const wchar_t* wndTitle);
+            void Term(void);
+            HWND GetHWND(void) const;
             
         private:
             Window(const Window& other) = delete;
             Window operator=(const Window& other) = delete;
 
         private:
-            static LRESULT CALLBACK MessageRouter(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+            static LRESULT CALLBACK MessageRouter(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
         protected:
-            virtual LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-        
+            virtual LRESULT CALLBACK WindowProcedure(UINT msg, WPARAM wparam, LPARAM lparam);
+
         private:
-            WNDCLASSEX m_window;
             HWND m_handle;
+            HINSTANCE m_hInstance;
+            std::wstring m_className;
+            bool m_isTerminated;
+
     };
+
+}
+
+// インライン定義
+namespace MWindow
+{
+
+    // インライン宣言と定義は同じファイルで    
+    inline HWND Window::GetHWND() const
+    {
+        return m_handle;
+    }   
 }
 
 #endif // _M_WINDOW
