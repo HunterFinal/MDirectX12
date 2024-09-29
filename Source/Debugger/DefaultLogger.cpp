@@ -16,6 +16,8 @@ Version : alpha_1.0.0
 #include <iostream>
 #include <cstdarg>
 
+#include <Windows.h>
+
 void DefaultLogger::LogFormat(const char* format, va_list args)
 {
     #ifdef _DEBUG

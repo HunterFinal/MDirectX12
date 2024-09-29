@@ -12,7 +12,11 @@ Version : alpha_1.0.0
 */
 
 // Debug include
+#ifdef _DEBUG
+
 #include <DebugHelper>
+
+#endif
 // end Debug include
 
 // MWindow include
@@ -47,12 +51,19 @@ Version : alpha_1.0.0
 #pragma endregion
 // end region of DX12 Wrapper
 
+#include <RandomGenerator.hpp>
+
 #ifdef _DEBUG
 int main()
 #else
 int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 #endif
 {
+    // メモリリークを知らせる
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
+    MUtility::MRandom::RandomGenerator<int> generator(0, 10);
+
     // Window
     MWindow::Window test;
 
@@ -95,28 +106,82 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     IDXGIAdapter* tmpAdapter = nullptr;
 
+    enum class GPULevel : INT8
+    {
+        NVIDIA      = 5,
+        Amd         = 4,
+        Intel       = 3,
+        Arm         = 2,
+        Qualcomm    = 1,
+
+        Lowest      = -128,
+
+    };
+
+    int adapterIndex = 0;
     // アタブターを探す
-    for (int i = 0; _dxgiFactory->EnumAdapters(i, &tmpAdapter) != DXGI_ERROR_NOT_FOUND; ++i)
+    while(_dxgiFactory->EnumAdapters(adapterIndex, &tmpAdapter) != DXGI_ERROR_NOT_FOUND)
     {
         adapters.push_back(tmpAdapter);
+        ++adapterIndex;
     }
 
     tmpAdapter = nullptr;
 
+    GPULevel level = GPULevel::Lowest;
+
     // アダプターを識別するための情報を取得
-    for(auto adpt : adapters)
+    for(const auto& adpt : adapters)
     {
         DXGI_ADAPTER_DESC adesc = {};
         // アダプターの説明オブジェクト取得
         adpt->GetDesc(&adesc);
 
-        std::wstring strDesc = adesc.Description;
+        std::wstring strDesc(adesc.Description);
+
+        // ::OutputDebugString(strDesc.c_str());
+        // ::OutputDebugString(L"\n");
 
         // 探したいアダプターの名前を確認
-        if(strDesc.find(L"NVIDIA") != std::wstring::npos)
+        if (strDesc.find(L"NVIDIA") != std::wstring::npos)
         {
-            tmpAdapter = adpt;
-            break;
+            if (level < GPULevel::NVIDIA)
+            {
+                level = GPULevel::NVIDIA;
+                tmpAdapter = adpt;
+            }
+        }
+        else if (strDesc.find(L"Amd") != std::wstring::npos)
+        {
+            if (level < GPULevel::Amd)
+            {
+                level = GPULevel::Amd;
+                tmpAdapter = adpt;
+            }
+        }
+        else if (strDesc.find(L"Intel") != std::wstring::npos)
+        {
+            if (level < GPULevel::Intel)
+            {
+                level = GPULevel::Intel;
+                tmpAdapter = adpt;
+            }
+        }
+        else if (strDesc.find(L"Arm") != std::wstring::npos)
+        {
+            if (level < GPULevel::Arm)
+            {
+                level = GPULevel::Arm;
+                tmpAdapter = adpt;
+            }
+        }
+        else if (strDesc.find(L"Qualcomm") != std::wstring::npos)
+        {
+            if (level < GPULevel::Qualcomm)
+            {
+                level = GPULevel::Qualcomm;
+                tmpAdapter = adpt;
+            }
         }
     }
 
@@ -132,7 +197,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     for(auto lv : levels)
     {
-        if(D3D12CreateDevice(nullptr, lv, IID_PPV_ARGS(&_device)) == S_OK)
+        if(D3D12CreateDevice(tmpAdapter, lv, IID_PPV_ARGS(&_device)) == S_OK)
         {
             featureLevel = lv;
             break;
@@ -670,6 +735,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // メインループ
     while(true)
     {
+
         if (PeekMessage(&msg,nullptr,0,0,PM_REMOVE))
         {
             TranslateMessage(&msg);
@@ -769,7 +835,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         _cmdQueue->ExecuteCommandLists(1, cmdLists);
 
         // フェンスを使ってGPUの処理が終わるまで待つ
-        fence.WaitSingle(_cmdQueue);
+        fence.Wait(_cmdQueue);
 
         // リセットし、命令オブジェクトをためていく
         // コマンドリストのクローズ状態を解除
@@ -790,7 +856,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     #pragma endregion
     // end region of Main Loop
 
-    test.Term();
+    test.Dispose();
 
     return 0;
 }

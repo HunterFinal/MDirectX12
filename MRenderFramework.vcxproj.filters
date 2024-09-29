@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="ソース ファイル">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Header File">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
@@ -39,10 +35,17 @@
     <Filter Include="Source File\Graphics_DX12">
       <UniqueIdentifier>{a30a37cb-2ba8-483c-9b68-83a78a78029d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header File\Utilities">
+      <UniqueIdentifier>{fbea6194-54ef-49a5-bb35-84408c48cc77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entry Point">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Entry Point</Filter>
     </ClCompile>
     <ClCompile Include="Source\Debugger\Debug.cpp">
       <Filter>Source File\Debugger</Filter>
@@ -78,6 +81,12 @@
     </ClInclude>
     <ClInclude Include="Obsolete Code\ObsoleteCode.h">
       <Filter>Obsolete Code</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Utilities\ComPtr.h">
+      <Filter>Header File\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Utilities\RandomGenerator.hpp">
+      <Filter>Header File\Utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

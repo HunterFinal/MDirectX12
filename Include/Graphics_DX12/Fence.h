@@ -22,7 +22,7 @@ Encoding : UTF-8
 
 #include <d3d12.h>
 
-#include <wrl.h>
+#include <ComPtr.h>
 
 // TODO
 class ID3D12DeviceNeededInit
@@ -48,13 +48,13 @@ namespace MFramework
             public:
                 bool Init(ID3D12Device* device);
 
-                void WaitSingle(ID3D12CommandQueue* commandQueue);
+                void Wait(ID3D12CommandQueue* commandQueue , UINT32 waitTime = INFINITE);
 
             private:
                 void Terminate() noexcept;
 
             private:
-                Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
+                ComPtr<ID3D12Fence> m_fence;
                 HANDLE m_event;
                 UINT64 m_fenceCount;
 

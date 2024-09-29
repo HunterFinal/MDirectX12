@@ -19,9 +19,25 @@ Version : alpha_1.0.0
 #include <Windows.h>
 #include <string>
 
+class IWindowInfo
+{
+    public:
+        virtual HWND GetHWND(void) const = 0;
+        virtual UINT32 GetWidth(void) const = 0;
+        virtual UINT32 GetHeight(void) const = 0;
+};
+
+namespace MFramework
+{
+    class IDisposable
+    {
+        virtual void Dispose(void) = 0;
+    };
+}
+
 namespace MWindow
 {
-    class Window
+    class Window : public IWindowInfo , public MFramework::IDisposable
     {
         public:
             Window();
@@ -29,13 +45,17 @@ namespace MWindow
             
         public:
             bool InitWnd(UINT32 width, UINT32 height, const wchar_t* className, const wchar_t* wndTitle);
-            void Term(void);
+            void Dispose(void);
             HWND GetHWND(void) const;
-            
+            UINT32 GetWidth(void) const;
+            UINT32 GetHeight(void) const;
+
+        // コピー禁止    
         private:
             Window(const Window& other) = delete;
             Window operator=(const Window& other) = delete;
 
+        // スタティック関数
         private:
             static LRESULT CALLBACK MessageRouter(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
@@ -43,10 +63,13 @@ namespace MWindow
             virtual LRESULT CALLBACK WindowProcedure(UINT msg, WPARAM wparam, LPARAM lparam);
 
         private:
-            HWND m_handle;
+            HWND m_handleWindow;
             HINSTANCE m_hInstance;
             std::wstring m_className;
             bool m_isTerminated;
+
+            UINT32 m_width;
+            UINT32 m_height;
 
     };
 
@@ -55,12 +78,19 @@ namespace MWindow
 // インライン定義
 namespace MWindow
 {
-
     // インライン宣言と定義は同じファイルで    
     inline HWND Window::GetHWND() const
     {
-        return m_handle;
+        return m_handleWindow;
     }   
+    inline UINT32 Window::GetWidth() const
+    {
+        return m_width;
+    }  
+    inline UINT32 Window::GetHeight() const
+    {
+        return m_height;
+    }  
 }
 
 #endif // _M_WINDOW

@@ -24,9 +24,10 @@ Encoding : UTF-8
 
 namespace
 {
-    static POINT pt {0,0}; 
-    wchar_t message[256] = L"\0";
+    constexpr size_t MESSAGE_BUFFER_SIZE = 256; 
+    wchar_t message[MESSAGE_BUFFER_SIZE] = L"\0";
     static UINT64 DEFAULT_CLASS_NAME_CNT = 42;
+
     std::wstring GetDefaultClassName()
     {
         std::wstringstream defaultClassName(L"Default_Class_Name");
@@ -38,10 +39,12 @@ namespace MWindow
 {
     // TODO temp
     Window::Window()
-        : m_handle(nullptr)
+        : m_handleWindow(nullptr)
         , m_hInstance(nullptr)
         , m_className()
         , m_isTerminated(false)
+        , m_width(0)
+        , m_height(0)
     {
         
     }
@@ -50,7 +53,7 @@ namespace MWindow
     {
         if (!m_isTerminated)
         {
-            Term();      
+            Dispose();      
         }
     }
 
@@ -109,7 +112,7 @@ namespace MWindow
 
         AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, false);
 
-        m_handle = CreateWindowEx(
+        m_handleWindow = CreateWindowEx(
                                     0,
                                     wc.lpszClassName,                   // クラス名指定
                                     wndTitleStr.c_str(),                // タイトルバー文字
@@ -123,25 +126,32 @@ namespace MWindow
                                     m_hInstance,                        // 呼び出しアプリケーションハンドル
                                     this                                // 追加パラメーター(後でユーザー定義のWndProcで使う)
                                   );
-        if(m_handle == nullptr)
+
+        if (m_handleWindow == INVALID_HANDLE_VALUE)
         {
+            Dispose();
             return false;
         }
+        else
+        {
+            // ウインドウ表示
+            ShowWindow(m_handleWindow,SW_SHOW);
+            UpdateWindow(m_handleWindow);
+            SetFocus(m_handleWindow);
 
-        // ウインドウ表示
-        ShowWindow(m_handle,SW_SHOW);
-        UpdateWindow(m_handle);
-        SetFocus(m_handle);
+            m_width = width;
+            m_height = height;
+        }
 
         return true;
     }
 
-    void Window::Term()
+    void Window::Dispose()
     {
         if (m_hInstance != nullptr)
         {
             UnregisterClass(m_className.c_str(), m_hInstance);
-            m_handle = nullptr;
+            m_handleWindow = nullptr;
             m_hInstance = nullptr;
 
             m_isTerminated = true;
@@ -159,29 +169,35 @@ namespace MWindow
             {
             case VK_ESCAPE:
             {
-                PostMessage(m_handle, WM_CLOSE, 0, 0);
+                PostMessage(m_handleWindow, WM_CLOSE, 0, 0);
             }
+            break;
             }
         }
         break;
         case WM_MOUSEMOVE:
         {
-            _stprintf_s(message, _T("現在の座標（%d,%d) \n"), LOWORD(lparam), HIWORD(lparam));
-            //再描画メッセージを発生させる
-            Debug.Log("%ls", message);
-            ::OutputDebugStringW(message);
+            // _stprintf_s(message, MESSAGE_BUFFER_SIZE, _T("現在の座標（%d,%d) \n"), LOWORD(lparam), HIWORD(lparam));
+            // Debug.Log("%ls", message);
+            // ::OutputDebugStringW(message);
+        }
+        break;
+        case WM_CLOSE:
+        {
+            DestroyWindow(m_handleWindow);
         }
         break;
         // ウィンドウが破棄されたら呼ばれる
         case WM_DESTROY:
         {
+            CloseWindow(m_handleWindow);
             // OSに対して「アプリは終わる」と伝える
             PostQuitMessage(0);
         }
         break;
         default:
         {
-            return DefWindowProc(m_handle, msg, wparam, lparam);
+            return DefWindowProc(m_handleWindow, msg, wparam, lparam);
         }
         break;
         }
@@ -195,7 +211,7 @@ namespace MWindow
         {
             LPCREATESTRUCT create = reinterpret_cast<LPCREATESTRUCT>(lparam);
             This = reinterpret_cast<Window*>(create->lpCreateParams);
-            This->m_handle = hWnd;
+            This->m_handleWindow = hWnd;
             SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)This);
 
         }

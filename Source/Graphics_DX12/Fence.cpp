@@ -50,7 +50,7 @@ namespace MFramework
             return true;
         }
 
-        void Fence::WaitSingle(ID3D12CommandQueue* commandQueue)
+        void Fence::Wait(ID3D12CommandQueue* commandQueue, UINT32 waitTime)
         {
             if (commandQueue == nullptr)
             {
@@ -69,7 +69,7 @@ namespace MFramework
                 m_fence->SetEventOnCompletion(m_fenceCount, m_event);
 
                 // イベントが発生するまで待ち続ける
-                WaitForSingleObject(m_event, INFINITE);
+                WaitForSingleObject(m_event, waitTime);
 
             }
 
