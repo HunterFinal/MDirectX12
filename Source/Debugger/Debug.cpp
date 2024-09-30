@@ -23,10 +23,6 @@ namespace MDebug
         #endif
     }
 
-    void Debug::Log(const wchar_t* format, ...) const
-    {
-    }
-
     Debug::Debug(ILogger* logger)
     {
         setlocale(LC_ALL, "");

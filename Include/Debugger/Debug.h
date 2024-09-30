@@ -23,7 +23,6 @@ namespace MDebug
     {
         public:
             void Log(const char* format,...) const;
-            void Log(const wchar_t* format, ...) const;
             void LogWarning(const char* format, ...) const;
             void LogError(const char* format, ...) const;
 
