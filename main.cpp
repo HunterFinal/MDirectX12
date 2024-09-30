@@ -62,7 +62,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // メモリリークを知らせる
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-    MUtility::MRandom::RandomGenerator<int> generator(0, 10);
+    MUtility::MRandom::RandomGenerator<int> generator(20, 50);
 
     // Window
     MWindow::Window test;

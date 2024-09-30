@@ -13,11 +13,7 @@ Version : alpha_1.0.0
 
 #include <random>
 #include <type_traits>
-#include <Windows.h>
 #include <cassert>
-
-#define IsIntType(Type) { std::is_integral(Type)::value };
-#define IsRealType(Type) { std::is_floating_point(Type)::value };
 
 namespace MUtility
 {
@@ -35,88 +31,42 @@ namespace MUtility
             std::uniform_real_distribution<T> Value;
         }; 
 
-        template<typename T>
+        template<bool IsInt, typename T>
         struct DistributionTraits
         {
-            using DistributionType = T;
+            
         };
 
-        template<>
-        struct DistributionTraits<UINT8>
+        template<typename T>
+        struct DistributionTraits<true, T>
         {
-            using DistributionType = UniformIntDistribution<UINT8>;
+            using DistributionType = UniformIntDistribution<T>;
         };
 
-        template<>
-        struct DistributionTraits<INT8>
+        template<typename T>
+        struct DistributionTraits<false, T>
         {
-            using DistributionType = UniformIntDistribution<INT8>;
-        };
-
-        template<>
-        struct DistributionTraits<INT16>
-        {
-            using DistributionType = UniformIntDistribution<INT16>;
-        };
-
-        template<>
-        struct DistributionTraits<UINT16>
-        {
-            using DistributionType = UniformIntDistribution<UINT16>;
-        };
-
-        template<>
-        struct DistributionTraits<INT32>
-        {
-            using DistributionType = UniformIntDistribution<INT32>;
-        };
-
-        template<>
-        struct DistributionTraits<UINT32>
-        {
-            using DistributionType = UniformIntDistribution<UINT32>;
-        };
-
-        template<>
-        struct DistributionTraits<INT64>
-        {
-            using DistributionType = UniformIntDistribution<INT64>;
-        };
-        
-        template<>
-        struct DistributionTraits<UINT64>
-        {
-            using DistributionType = UniformIntDistribution<UINT64>;
-        };
-
-        template<>
-        struct DistributionTraits<float>
-        {
-            using DistributionType = UniformRealDistribution<float>;
-        };
-
-        template<>
-        struct DistributionTraits<double>
-        {
-            using DistributionType = UniformRealDistribution<double>;
+            using DistributionType = UniformRealDistribution<T>;
         };
 
         template<typename T>
         class RandomGenerator
         {
-            using Distribution = typename DistributionTraits<T>::DistributionType;
-            
-            public:
-                RandomGenerator(T min, T max)
-                {
-                    // データ型がサポートされていないときエラーを吐き出す
-                    static_assert((std::is_integral<T>::value) || (std::is_floating_point<T>::value), 
-                                  "RandomGeneratorの型は整数や浮动小数点数にならなければなりません"
-                                 );
+            // データ型がサポートされていない(整数型と浮動小数点数以外)ときエラーを吐き出す
+            static_assert((std::is_integral<T>::value) || (std::is_floating_point<T>::value),
+                          "RandomGeneratorの型は整数や浮动小数点数にならなければなりません"
+                         );
 
+            using RandomType = T;
+            // 離散分布の型を指定
+            using Distribution = typename DistributionTraits<std::is_integral_v<RandomType>, RandomType>::DistributionType;
+
+            public:
+                explicit RandomGenerator(RandomType min, RandomType max)
+                {
                     if(min > max)
                     {
-                        T temp = min;
+                        RandomType temp = min;
                         min = max;
                         max = temp;
                     }
@@ -126,31 +76,59 @@ namespace MUtility
                     m_randomEngine.seed(seedGenerator());
 
                     // 乱数生成範囲を設定
-                    decltype(m_distribution.Value.param()) distributionRange(min, max);
-                    m_distribution.Value.param(distributionRange);
+                    ChangeGeneratorRange(min, max);
 
-                    m_min = min;
-                    m_max = max;
                 }
                 ~RandomGenerator()
                 {
 
                 }
 
-            public:
-                T GetMin() const 
+                friend bool operator==(const RandomGenerator& lhs, const RandomGenerator& rhs)
                 {
-                    return m_min;
-                }
-                T GetMax() const
-                {
-                    return m_max;
+                    return lhs.m_distribution.Value == rhs.m_distribution.Value;
                 }
 
-                T GenerateRandom()
+                friend bool operator!=(const RandomGenerator& lhs, const RandomGenerator& rhs)
+                {
+                    return !(lhs == rhs);
+                }
+
+            public:
+                /// <summary>
+                /// 乱数ジェネレーターの最小値を返す
+                /// </summary>
+                /// <returns></returns>
+                RandomType GetMin() const
+                {
+                    return m_distribution.Value.a();
+                }
+                /// <summary>
+                /// 乱数ジェネレーターの最大値を返す
+                /// </summary>
+                /// <returns></returns>
+                RandomType GetMax() const
+                {
+                    return m_distribution.Value.b();
+                }
+                /// <summary>
+                /// 乱数を生成
+                /// </summary>
+                /// <returns></returns>
+                RandomType GenerateRandom()
                 {
                     return m_distribution.Value(m_randomEngine);
                 }
+
+                /// <summary>
+                /// 乱数の生成範囲を変更
+                /// </summary>
+                void ChangeGeneratorRange(RandomType min, RandomType max)
+                {
+                    decltype(m_distribution.Value.param()) distributionRange(min, max);
+                    m_distribution.Value.param(distributionRange);
+                }
+
             private:
                 RandomGenerator(const RandomGenerator&) = delete;
                 RandomGenerator& operator=(const RandomGenerator&) = delete;
@@ -158,8 +136,6 @@ namespace MUtility
             private:
                 std::default_random_engine m_randomEngine;
                 Distribution m_distribution;
-                T m_max;
-                T m_min;
         };
     }
 }

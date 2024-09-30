@@ -24,18 +24,11 @@ Encoding : UTF-8
 
 #include <ComPtr.h>
 
-// TODO
-class ID3D12DeviceNeededInit
-{
-    public:
-        virtual bool Init(ID3D12Device* device) = 0;
-};
-
 namespace MFramework
 {
     namespace MGraphics_DX12
     {
-        class Fence : public ID3D12DeviceNeededInit
+        class Fence
         {
             private:
                 Fence(const Fence&) = delete;
