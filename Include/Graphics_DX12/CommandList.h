@@ -35,6 +35,7 @@ namespace MFramework
                 bool Init(ID3D12Device* device, ID3D12CommandAllocator* allocator);
 
                 void SetVertexBuffer(UINT startIndex, UINT vertBufferCnt, D3D12_VERTEX_BUFFER_VIEW* bufferView);
+                void SetIndexBuffers(D3D12_INDEX_BUFFER_VIEW* indexBufferView);
                 void SetBarrier(UINT barrierCnt, D3D12_RESOURCE_BARRIER* barrier);
                 void SetPipelineState(ID3D12PipelineState* pipelineState);
                 void SetRenderTargets(
@@ -43,7 +44,10 @@ namespace MFramework
                                         bool RTsSingleHandleToDescriptorRange, 
                                         D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDesctriptor
                                      );
-                void SetViewport(D3D12_VIEWPORT viewport);
+
+                void SetViewport(UINT32 width, UINT32 height);
+                void SetScissorRect(UINT32 width, UINT32 height);
+                void SetRootSignature(ID3D12RootSignature* rootSignature);
 
             // TODO
             public:

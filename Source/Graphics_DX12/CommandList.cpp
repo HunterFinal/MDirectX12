@@ -101,6 +101,21 @@ namespace MFramework
 
             m_commandList->IASetVertexBuffers(startIndex, vertBufferCnt, bufferView);
         }
+        void CommandList::SetIndexBuffers(D3D12_INDEX_BUFFER_VIEW* indexBufferView)
+        {
+            // 初期化していないため、関数を終了させる
+            if (m_commandList == nullptr)
+            {
+                return;
+            }
+
+            if (indexBufferView == nullptr)
+            {
+                return;
+            }
+
+            m_commandList->IASetIndexBuffer(indexBufferView);
+        }
 
         void CommandList::SetBarrier(UINT barrierCnt, D3D12_RESOURCE_BARRIER* barrier)
         {
@@ -156,6 +171,39 @@ namespace MFramework
         
         }
 
+        void CommandList::SetViewport(UINT32 width, UINT32 height)
+        {
+            m_viewport.Width = width;
+            m_viewport.Height = height;
+            m_viewport.TopLeftX = 0;
+            m_viewport.TopLeftY = 0;
+            m_viewport.MaxDepth = 1.0f;
+            m_viewport.MinDepth = 0.0f;
+        }
+        void CommandList::SetScissorRect(UINT32 width, UINT32 height)
+        {
+            m_scissorRect.top = 0;
+            m_scissorRect.left = 0;
+            m_scissorRect.right = m_scissorRect.left + width;
+            m_scissorRect.bottom = m_scissorRect.top + height;
+        }
+
+        void CommandList::SetRootSignature(ID3D12RootSignature* rootSignature)
+        {
+            // 初期化していないため、関数を終了させる
+            if (m_commandList == nullptr)
+            {
+                return;
+            }
+
+            if (rootSignature == nullptr)
+            {
+                return;
+            }
+
+            m_commandList->SetGraphicsRootSignature(rootSignature);
+
+        }
         void CommandList::ClearScreen(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetView)
         {
             // 初期化していないため、関数を終了させる

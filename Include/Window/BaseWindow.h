@@ -19,6 +19,8 @@ Version : alpha_1.0.0
 #include <Windows.h>
 #include <string>
 
+#include <Interfaces/IDisposable.h>
+
 class IWindowInfo
 {
     public:
@@ -26,14 +28,6 @@ class IWindowInfo
         virtual UINT32 GetWidth(void) const = 0;
         virtual UINT32 GetHeight(void) const = 0;
 };
-
-namespace MFramework
-{
-    class IDisposable
-    {
-        virtual void Dispose(void) = 0;
-    };
-}
 
 namespace MWindow
 {
