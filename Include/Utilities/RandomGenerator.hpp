@@ -19,17 +19,6 @@ namespace MUtility
 {
     namespace MRandom
     {
-        template<typename T>
-        struct UniformIntDistribution
-        {
-            std::uniform_int_distribution<T> Value;
-        }; 
-
-        template<typename T>
-        struct UniformRealDistribution
-        {
-            std::uniform_real_distribution<T> Value;
-        }; 
 
         template<bool IsInt, typename T>
         struct DistributionTraits
@@ -40,13 +29,13 @@ namespace MUtility
         template<typename T>
         struct DistributionTraits<true, T>
         {
-            using DistributionType = UniformIntDistribution<T>;
+            using DistributionType = std::uniform_int_distribution<T>;
         };
 
         template<typename T>
         struct DistributionTraits<false, T>
         {
-            using DistributionType = UniformRealDistribution<T>;
+            using DistributionType = std::uniform_real_distribution<T>;
         };
 
         template<typename T>
@@ -86,7 +75,7 @@ namespace MUtility
 
                 friend bool operator==(const RandomGenerator& lhs, const RandomGenerator& rhs)
                 {
-                    return lhs.m_distribution.Value == rhs.m_distribution.Value;
+                    return lhs.m_distribution == rhs.m_distribution;
                 }
 
                 friend bool operator!=(const RandomGenerator& lhs, const RandomGenerator& rhs)
@@ -101,7 +90,7 @@ namespace MUtility
                 /// <returns></returns>
                 RandomType GetMin() const
                 {
-                    return m_distribution.Value.a();
+                    return m_distribution.a();
                 }
                 /// <summary>
                 /// 乱数ジェネレーターの最大値を返す
@@ -109,7 +98,7 @@ namespace MUtility
                 /// <returns></returns>
                 RandomType GetMax() const
                 {
-                    return m_distribution.Value.b();
+                    return m_distribution.b();
                 }
                 /// <summary>
                 /// 乱数を生成
@@ -117,7 +106,7 @@ namespace MUtility
                 /// <returns></returns>
                 RandomType GenerateRandom()
                 {
-                    return m_distribution.Value(m_randomEngine);
+                    return m_distribution(m_randomEngine);
                 }
 
                 /// <summary>
@@ -125,8 +114,8 @@ namespace MUtility
                 /// </summary>
                 void ChangeGeneratorRange(RandomType min, RandomType max)
                 {
-                    decltype(m_distribution.Value.param()) distributionRange(min, max);
-                    m_distribution.Value.param(distributionRange);
+                    decltype(m_distribution.param()) distributionRange(min, max);
+                    m_distribution.param(distributionRange);
                 }
 
             private:
