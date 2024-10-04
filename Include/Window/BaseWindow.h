@@ -13,8 +13,8 @@ Version : alpha_1.0.0
 
 #pragma once
 
-#ifndef _M_WINDOW
-#define _M_WINDOW
+#ifndef M_WINDOW
+#define M_WINDOW 1
 
 #include <Windows.h>
 #include <string>
@@ -87,4 +87,4 @@ namespace MWindow
     }  
 }
 
-#endif // _M_WINDOW
+#endif // M_WINDOW

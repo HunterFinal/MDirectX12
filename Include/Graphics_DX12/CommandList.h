@@ -15,8 +15,8 @@ Encoding : UTF-8
 
 */
 
-#ifndef _M_CMDLIST
-#define _M_CMDLIST
+#ifndef M_CMDLIST
+#define M_CMDLIST 1
 
 #include <d3d12.h>
 #include <ComPtr.h>

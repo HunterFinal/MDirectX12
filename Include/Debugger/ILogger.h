@@ -13,8 +13,8 @@ Version : alpha_1.0.0
 
 #pragma once
 
-#ifndef _LOGGER
-#define _LOGGER
+#ifndef M_LOGGER
+#define M_LOGGER 1
 
 #include <cstdarg>
 

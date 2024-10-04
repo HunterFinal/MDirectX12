@@ -17,8 +17,8 @@ Encoding : UTF-8
 
 #pragma once
 
-#ifndef _M_FENCE
-#define _M_FENCE
+#ifndef M_FENCE
+#define M_FENCE 1
 
 #include <d3d12.h>
 

@@ -15,8 +15,8 @@ Encoding : UTF-8
 
 */
 
-#ifndef _M_DISPOSE
-#define _M_DISPOSE
+#ifndef M_DISPOSE
+#define M_DISPOSE 1
 
 namespace MFramework
 {

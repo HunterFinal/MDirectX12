@@ -16,8 +16,8 @@ Encoding : UTF-8
 */
 #pragma once
 
-#ifndef _M_COM_PTR
-#define _M_COM_PTR
+#ifndef M_COM_PTR
+#define M_COM_PTR 1
 
 #include <wrl.h>
 

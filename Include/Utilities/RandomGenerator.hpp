@@ -11,6 +11,9 @@ Version : alpha_1.0.0
 
 */
 
+#ifndef M_RANDOM_GENERATOR
+#define M_RANDOM_GENERATOR 1
+
 #include <random>
 #include <type_traits>
 #include <cassert>
@@ -128,3 +131,5 @@ namespace MUtility
         };
     }
 }
+
+#endif

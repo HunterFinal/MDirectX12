@@ -13,8 +13,8 @@ Version : alpha_1.0.0
 
 #pragma once
 
-#ifndef _DEFAULT_LOGGER
-#define _DEFAULT_LOGGER
+#ifndef M_DEFAULT_LOGGER
+#define M_DEFAULT_LOGGER 1
 
 #include <ILogger.h>
 

@@ -12,8 +12,8 @@ Version : alpha_1.0.0
 */
 
 #pragma once
-#ifndef _DEBUGGER
-#define _DEBUGGER
+#ifndef M_DEBUGGER
+#define M_DEBUGGER 1
 
 #include <ILogger.h>
 

@@ -13,8 +13,8 @@ Version : alpha_1.0.0
 
 #pragma once
 
-#ifndef _DEBUG_HELPER
-#define _DEBUG_HELPER
+#ifndef M_DEBUG_HELPER
+#define M_DEBUG_HELPER 1
 
 #include <Debug.h>
 

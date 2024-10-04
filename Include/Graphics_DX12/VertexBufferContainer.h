@@ -15,8 +15,8 @@ Encoding : UTF-8
 
 */
 
-#ifndef _M_VERTBUFFER_CONTAINER
-#define _M_VERTBUFFER_CONTAINER
+#ifndef M_VERTBUFFER_CONTAINER
+#define M_VERTBUFFER_CONTAINER 1
 
 #include <d3d12.h>
 #include <DirectXMath.h>
