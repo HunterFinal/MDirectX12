@@ -67,11 +67,8 @@ namespace MWindow
 
     };
 
-}
-
 // インライン定義
-namespace MWindow
-{
+
     // インライン宣言と定義は同じファイルで    
     inline HWND Window::GetHWND() const
     {

@@ -62,6 +62,15 @@
     <ClCompile Include="Source\Graphics_DX12\Fence.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\CommandList.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\VertexBufferContainer.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\DX12Device.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Debugger\Debug.h">
@@ -88,10 +97,28 @@
     <ClInclude Include="Include\Utilities\RandomGenerator.hpp">
       <Filter>Header File\Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\CommandList.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\DX12Device.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\VertexBufferContainer.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Utilities\Base-Def-Macro.h">
+      <Filter>Header File\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Utilities\Class-Def-Macro.h">
+      <Filter>Header File\Utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Include\Debugger\DebugHelper">
       <Filter>Header File\Debugger</Filter>
+    </None>
+    <None Include="Shaders\HLSLs\BasicShaderHeader.hlsli">
+      <Filter>Shader\HLSL</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstdarg>
+#include <cassert>
 
 #include <DefaultLogger.h>
 
@@ -21,6 +22,21 @@ namespace MDebug
         va_end(vaList);
 
         #endif
+    }
+
+    void Debug::LogWarning(const char* format, ...) const
+    {
+        assert(false);
+    }
+
+    void Debug::LogError(const char* format, ...) const
+    {
+        assert(false);
+    }
+
+    void Debug::SetLogger(ILogger* logger)
+    {
+        assert(false);
     }
 
     Debug::Debug(ILogger* logger)

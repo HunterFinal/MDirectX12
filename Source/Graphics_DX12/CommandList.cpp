@@ -16,6 +16,7 @@ Encoding : UTF-8
 */
 
 #include <Graphics_DX12/CommandList.h>
+#include <cassert>
 
 namespace
 {
@@ -37,17 +38,15 @@ namespace MFramework
     {
         CommandList::CommandList()
             : m_commandList(nullptr)
+            , m_commandAllocator(nullptr)
             , m_viewport({})
             , m_scissorRect({})
         {
 
         }
-        bool CommandList::Init(ID3D12Device* device, ID3D12CommandAllocator* allocator)
+        bool CommandList::Init(ID3D12Device* device)
         {
-            if ((device == nullptr) || (allocator == nullptr))
-            {
-                return;
-            }           
+            assert(device != nullptr);
             // TODO
             // D3D12_COMMAND_LIST_TYPE_DIRECT
             // 値: 0
@@ -70,13 +69,20 @@ namespace MFramework
             // ビデオ処理用のコマンドバッファーを指定します。
             //
             // コマンドリストを作成
-            HRESULT result = device->CreateCommandList(
-                                                        0,                                          // NodeMask(単一GPU操作する場合0でよい)
-                                                        M_COMMAND_LIST_TYPE,                        // CommandList種類
-                                                        allocator,                                  // CommandAllocatorのポインタ
-                                                        nullptr,                                    // コマンドリストの初期パイプライン状態を含むパイプライン状態オブジェクトへの省略可能なポインター
-                                                        IID_PPV_ARGS(m_commandList.GetAddressOf()) 
-                                                      );
+            HRESULT result = device->CreateCommandAllocator(M_COMMAND_LIST_TYPE, IID_PPV_ARGS(m_commandAllocator.GetAddressOf()));
+
+            if (FAILED(result))
+            {
+                return false;
+            }
+
+            result = device->CreateCommandList(
+                                                0,                                          // NodeMask(単一GPU操作する場合0でよい)
+                                                M_COMMAND_LIST_TYPE,                        // CommandList種類
+                                                m_commandAllocator.Get(),                   // CommandAllocatorのポインタ
+                                                nullptr,                                    // コマンドリストの初期パイプライン状態を含むパイプライン状態オブジェクトへの省略可能なポインター
+                                                IID_PPV_ARGS(m_commandList.GetAddressOf()) 
+                                              );
 
             if (FAILED(result))
             {
@@ -162,7 +168,7 @@ namespace MFramework
                 return;
             }
 
-            if(heapStart == nullptr)
+            if (heapStart == nullptr)
             {
                 return;
             }

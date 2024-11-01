@@ -141,14 +141,22 @@
     <ClCompile Include="Source\Debugger\Debug.cpp" />
     <ClCompile Include="Source\Debugger\DebugHelper.cpp" />
     <ClCompile Include="Source\Debugger\DefaultLogger.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\CommandList.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\DX12Device.cpp" />
     <ClCompile Include="Source\Graphics_DX12\Fence.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\VertexBufferContainer.cpp" />
     <ClCompile Include="Source\Window\BaseWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Debugger\Debug.h" />
     <ClInclude Include="Include\Debugger\DefaultLogger.h" />
     <ClInclude Include="Include\Debugger\ILogger.h" />
+    <ClInclude Include="Include\Graphics_DX12\CommandList.h" />
+    <ClInclude Include="Include\Graphics_DX12\DX12Device.h" />
     <ClInclude Include="Include\Graphics_DX12\Fence.h" />
+    <ClInclude Include="Include\Graphics_DX12\VertexBufferContainer.h" />
+    <ClInclude Include="Include\Utilities\Base-Def-Macro.h" />
+    <ClInclude Include="Include\Utilities\Class-Def-Macro.h" />
     <ClInclude Include="Include\Utilities\ComPtr.h" />
     <ClInclude Include="Include\Utilities\RandomGenerator.hpp" />
     <ClInclude Include="Include\Window\BaseWindow.h" />
@@ -156,6 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Include\Debugger\DebugHelper" />
+    <None Include="Shaders\HLSLs\BasicShaderHeader.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\HLSLs\BasicPixelShader.hlsl">

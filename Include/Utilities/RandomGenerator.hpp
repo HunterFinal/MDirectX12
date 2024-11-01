@@ -12,7 +12,7 @@ Version : alpha_1.0.0
 */
 
 #ifndef M_RANDOM_GENERATOR
-#define M_RANDOM_GENERATOR 1
+#define M_RANDOM_GENERATOR
 
 #include <random>
 #include <type_traits>
@@ -23,7 +23,7 @@ namespace MUtility
     namespace MRandom
     {
 
-        template<bool IsInt, typename T>
+        template<bool IsInteger, typename T>
         struct DistributionTraits
         {
             
@@ -46,7 +46,7 @@ namespace MUtility
         {
             // データ型がサポートされていない(整数型と浮動小数点数以外)ときエラーを吐き出す
             static_assert((std::is_integral<T>::value) || (std::is_floating_point<T>::value),
-                          "RandomGeneratorの型は整数や浮动小数点数にならなければなりません"
+                          "RandomGeneratorの型は整数や浮動小数点数にならなければなりません"
                          );
 
             using RandomType = T;

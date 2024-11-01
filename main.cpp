@@ -46,12 +46,21 @@ Version : alpha_1.0.0
 
 #pragma region DX12 Wrapper
 
+#include <Graphics_DX12/DX12Device.h>
 #include <Graphics_DX12/Fence.h>
 
 #pragma endregion
 // end region of DX12 Wrapper
 
+#include <ComPtr.h>
+#include <Graphics_DX12/Texture.h>
 #include <RandomGenerator.hpp>
+
+struct Vertex
+{
+    DirectX::XMFLOAT3 pos;
+    DirectX::XMFLOAT2 uv;
+};
 
 #ifdef _DEBUG
 int main()
@@ -61,8 +70,6 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 {
     // メモリリークを知らせる
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-    MUtility::MRandom::RandomGenerator<int> generator(20, 50);
 
     // Window
     MWindow::Window test;
@@ -87,128 +94,25 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // end region of D3D12 DebugLayer
 
     #pragma region D3D12 Adapter and Device
-    ID3D12Device* _device = nullptr;
-    IDXGIFactory6* _dxgiFactory = nullptr;
+    ComPtr<IDXGIFactory6> _dxgiFactory = nullptr;
 
     // アダプターを列挙するためDXGIFactoryオブジェクトを作成 
     HRESULT result = S_OK;
 
-    if (FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&_dxgiFactory))))
-    {
-        if (FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&_dxgiFactory))))
-        {
-            return -1;
-        }
-    }
-    
-    // 利用可能なアタブターの列挙用
-    std::vector<IDXGIAdapter*> adapters;
+#ifdef _DEBUG                           
+    result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(_dxgiFactory.GetAddressOf()));
+#else
+    result = CreateDXGIFactory1(IID_PPV_ARGS(_dxgiFactory.GetAddressOf()));
+#endif
 
-    IDXGIAdapter* tmpAdapter = nullptr;
-
-    enum class GPULevel : INT8
-    {
-        NVIDIA      = 5,
-        Amd         = 4,
-        Intel       = 3,
-        Arm         = 2,
-        Qualcomm    = 1,
-
-        Lowest      = -128,
-
-    };
-
-    int adapterIndex = 0;
-    // アタブターを探す
-    while(_dxgiFactory->EnumAdapters(adapterIndex, &tmpAdapter) != DXGI_ERROR_NOT_FOUND)
-    {
-        adapters.push_back(tmpAdapter);
-        ++adapterIndex;
-    }
-
-    tmpAdapter = nullptr;
-
-    GPULevel level = GPULevel::Lowest;
-
-    // アダプターを識別するための情報を取得
-    for(const auto& adpt : adapters)
-    {
-        DXGI_ADAPTER_DESC adesc = {};
-        // アダプターの説明オブジェクト取得
-        adpt->GetDesc(&adesc);
-
-        std::wstring strDesc(adesc.Description);
-
-        // ::OutputDebugString(strDesc.c_str());
-        // ::OutputDebugString(L"\n");
-
-        // 探したいアダプターの名前を確認
-        if (strDesc.find(L"NVIDIA") != std::wstring::npos)
-        {
-            if (level < GPULevel::NVIDIA)
-            {
-                level = GPULevel::NVIDIA;
-                tmpAdapter = adpt;
-            }
-        }
-        else if (strDesc.find(L"Amd") != std::wstring::npos)
-        {
-            if (level < GPULevel::Amd)
-            {
-                level = GPULevel::Amd;
-                tmpAdapter = adpt;
-            }
-        }
-        else if (strDesc.find(L"Intel") != std::wstring::npos)
-        {
-            if (level < GPULevel::Intel)
-            {
-                level = GPULevel::Intel;
-                tmpAdapter = adpt;
-            }
-        }
-        else if (strDesc.find(L"Arm") != std::wstring::npos)
-        {
-            if (level < GPULevel::Arm)
-            {
-                level = GPULevel::Arm;
-                tmpAdapter = adpt;
-            }
-        }
-        else if (strDesc.find(L"Qualcomm") != std::wstring::npos)
-        {
-            if (level < GPULevel::Qualcomm)
-            {
-                level = GPULevel::Qualcomm;
-                tmpAdapter = adpt;
-            }
-        }
-    }
-
-    D3D_FEATURE_LEVEL levels[] = 
-    {
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0,
-    };
-
-    D3D_FEATURE_LEVEL featureLevel;
-
-    for(auto lv : levels)
-    {
-        if(D3D12CreateDevice(tmpAdapter, lv, IID_PPV_ARGS(&_device)) == S_OK)
-        {
-            featureLevel = lv;
-            break;
-        }
-    }
-
-    // 生成失敗
-    if(_device == nullptr)
+    if (FAILED(result))
     {
         return -1;
     }
+
+    MFramework::DX12Device device;
+    device.Init(_dxgiFactory.Get());
+
     #pragma endregion
     // end region of D3D12 Adapter and Device
 
@@ -222,7 +126,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // 命令のインターフェース
     ID3D12GraphicsCommandList* _cmdList = nullptr;
 
-    result = _device->CreateCommandAllocator(CMD_LIST_TYPE, IID_PPV_ARGS(&_cmdAllocator));
+    result = device->CreateCommandAllocator(CMD_LIST_TYPE, IID_PPV_ARGS(&_cmdAllocator));
 
     // 生成失敗
     if(result != S_OK)
@@ -230,7 +134,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         return -1;
     }
 
-    result = _device->CreateCommandList(0, CMD_LIST_TYPE, _cmdAllocator, nullptr, IID_PPV_ARGS(&_cmdList));
+    result = device->CreateCommandList(0, CMD_LIST_TYPE, _cmdAllocator, nullptr, IID_PPV_ARGS(&_cmdList));
 
     // 生成失敗
     if(result != S_OK)
@@ -261,7 +165,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     cmdQueueDesc.Type = CMD_LIST_TYPE;
 
     // キュー生成
-    result = _device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&_cmdQueue));
+    result = device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&_cmdQueue));
 
     // 生成失敗
     if(result != S_OK)
@@ -323,7 +227,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     ID3D12DescriptorHeap* rtvHeaps = nullptr;
 
-    result = _device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&rtvHeaps));
+    result = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&rtvHeaps));
 
     // 生成失敗
     if(result != S_OK)
@@ -353,10 +257,10 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     for(size_t i = 0; i < swcDesc.BufferCount; ++i)
     {
         result = _swapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&_backBuffers[i]));
-        _device->CreateRenderTargetView(_backBuffers[i], nullptr, handle);
+        device->CreateRenderTargetView(_backBuffers[i], nullptr, handle);
 
         // ハンドルサイズを計算し、先頭からずらす
-        handle.ptr += _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        handle.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     }
     #pragma endregion
     // end region of D3D12 SwapChain and Descriptor binding
@@ -366,23 +270,174 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     MFramework::MGraphics_DX12::Fence fence;
 
-    fence.Init(_device);
+    fence.Init(device);
 
     #pragma endregion
     // end region of D3D12 Fence
     // D3D12に使う定数
     // RTVのインクリメントサイズ
-    const UINT RTV_INCREMENT_SIZE = _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    const UINT RTV_INCREMENT_SIZE = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     // 頂点座標
     // ※時計回り
-    DirectX::XMFLOAT3 vertices[] = 
+    Vertex vertices[] = 
     {
-        {-0.4f, -0.7f, 0.f},  // 左下
-        {-0.4f,  0.7f, 0.f},  // 左上
-        { 0.4f, -0.7f, 0.f},  // 右下
-        { 0.4f,  0.7f, 0.f},  // 右上
+        {{-0.4f, -0.7f, 0.f},{0.0f, 1.0f}},     // 左下
+        {{-0.4f,  0.7f, 0.f},{0.0f, 0.0f}},     // 左上
+        {{ 0.4f, -0.7f, 0.f},{1.0f, 1.0f}},     // 右下
+        {{ 0.4f,  0.7f, 0.f},{1.0f, 0.0f}},     // 右上
     };
+    
+    // テクスチャ
+    std::vector<MFramework::Color> textureData;
+    textureData.resize(256*256);
+
+    MUtility::MRandom::RandomGenerator<int> randomColorGenerator(0,255);
+
+    for (auto& color : textureData)
+    {
+        color.R = randomColorGenerator.GenerateRandom();
+        color.G = randomColorGenerator.GenerateRandom();
+        color.B = randomColorGenerator.GenerateRandom();
+        color.A = 255;
+    }
+
+    // テクスチャバッファーをCPUからGPUに転送する方法：
+    // 1: ID3D12Resource::WriteToSubresource()メソッドを使う:比較的わかりやすいが特定の条件で効率が低下
+    // 2: ID3D12Resource::Map()メソッドと、ID3D12GraphicsCommandList::CopyTextureRegion()/CopyBufferRegionメソッドを利用する:推奨されている
+
+    // WriteToSubresourceで転送するためのヒープ設定
+    D3D12_HEAP_PROPERTIES textureHeapProperty = {};
+
+    // 特殊な設定なのでDEFAULTでもUPLOADでもない
+    textureHeapProperty.Type = D3D12_HEAP_TYPE_CUSTOM;
+
+    // ライトバック
+    textureHeapProperty.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+
+    // 転送はL0、つまりCPU側から直接行う
+    textureHeapProperty.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+
+    // 単一アダプターのため0
+    textureHeapProperty.CreationNodeMask = 0;
+    textureHeapProperty.VisibleNodeMask = 0;
+
+    D3D12_RESOURCE_DESC textureResourceDesc = {};
+
+    textureResourceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureResourceDesc.Width = 256;
+    textureResourceDesc.Height = 256;
+    textureResourceDesc.DepthOrArraySize = 1;                           // 2Dで配列でもないので1
+    textureResourceDesc.SampleDesc.Count = 1;                           // 通常テクスチャなのでアンチエイリアシングしない
+    textureResourceDesc.SampleDesc.Quality = 0;                         // クオリティは最低
+    textureResourceDesc.MipLevels = 1;                                  // ミップマップしないのでミップ数は一つ
+    textureResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    textureResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;          // レイアウトは決定しない
+    textureResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;               // 特にフラグなし
+
+    ID3D12Resource* texBuffer = nullptr;
+    result = device->CreateCommittedResource(
+                                                &textureHeapProperty,
+                                                D3D12_HEAP_FLAG_NONE,
+                                                &textureResourceDesc,
+                                                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, // テクスチャ用指定
+                                                nullptr,
+                                                IID_PPV_ARGS(&texBuffer)
+                                            ); 
+
+    if (FAILED(result))
+    {
+        return -1;
+    }
+
+    // テクスチャバッファーの転送
+    result = texBuffer->WriteToSubresource(
+                                            0,                                                                  // サブリソースインデックス
+                                            nullptr,                                                            // 書き込み領域の指定(nullptrならば先頭から全領域となる)
+                                            textureData.data(),                                                 // 書き込みたいデータのアドレス(元データアドレス)
+                                            sizeof(MFramework::Color) * 256,                                    // 1ラインサイズ
+                                            sizeof(MFramework::Color) * static_cast<UINT>(textureData.size())   // 全サイズ
+                                          );
+
+    if (FAILED(result))
+    {
+        return -1;
+    }
+
+    // テクスチャディスクリプタヒープ作成
+    ID3D12DescriptorHeap* texDescHeap = nullptr;
+    D3D12_DESCRIPTOR_HEAP_DESC texDescHeapDesc = {};
+
+    // シェーダーから見えるように
+    texDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    // マスクは0
+    texDescHeapDesc.NodeMask = 0;
+
+    // ビューは今のところ1つだけ
+    texDescHeapDesc.NumDescriptors = 1;
+
+    // シェーダーリソースビュー用
+    texDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+    // 生成
+    result = device->CreateDescriptorHeap(&texDescHeapDesc, IID_PPV_ARGS(&texDescHeap));
+
+    if (FAILED(result))
+    {
+        return -1;
+    }
+
+    // シェーダーリソースビューを作成
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;                                // RGBA(0.0f~1.0fに正規化)
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;                      // 2Dテクスチャ
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING; // データのRGBAをどのようにマッピングするかということを指定するためのもの
+                                                                                // 画像の情報がそのままRGBAなど「指定されたフォーマットに、
+                                                                                // データどおりの順序で割り当てられている」ことを表しています。
+    srvDesc.Texture2D.MipLevels = 1;                                            // ミップマップは使用しないので１
+
+    // 三つ目の引数はディスクリプタヒープのどこにこのビューを配置するかを指定するためのもの
+    // 複数のテクスチャビューがある場合、取得したハンドルからオフセットを指定する必要がある
+    device->CreateShaderResourceView(
+                                        texBuffer,                                          // ビューと関連付けるバッファー
+                                        &srvDesc,                                           // 先ほど設定したテクスチャ設定情報
+                                        texDescHeap->GetCPUDescriptorHandleForHeapStart()   // ヒープのどこに割り当てるか
+                                    );
+
+    D3D12_DESCRIPTOR_RANGE descTableRange = {};
+
+    descTableRange.NumDescriptors = 1;                                                          // テクスチャ１つ（ディスクリプタ数）
+    descTableRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;                                 // 種別はテクスチャ
+    descTableRange.BaseShaderRegister = 0;                                                      // 0番スロットから
+    descTableRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;    // 連続したディスクリプタレンジが前のディスクリプタレンジの直後に来る
+    
+    // ルートパラメーター作成
+    D3D12_ROOT_PARAMETER rootParam = {};
+
+    rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+
+    // ピクセルシェーダーから見える
+    rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    // ディスクリプタレンジのアドレス
+    rootParam.DescriptorTable.pDescriptorRanges = &descTableRange;
+
+    // ディスクリプタレンジ数
+    rootParam.DescriptorTable.NumDescriptorRanges = 1;
+
+    // サンプラーを作成
+    D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
+    samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;                     // 横方向の繰り返し
+    samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;                     // 縦方向の繰り返し
+    samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;                     // 奥行き方向の繰り返し
+    samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;      // ボーダーは黒
+    samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;                       // 線形補間
+    samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;                                     // ミップマップ最大値
+    samplerDesc.MinLOD = 0.0f;                                                  // ミップマップ最小値
+    samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;               // ピクセルシェーダーから見える
+    samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;                   // リサンプリングしない
 
     // 頂点バッファー作成
     // ID3D12Device::CreateCommitedResource()を使う
@@ -407,7 +462,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     ID3D12Resource* _vertBuffer = nullptr;
 
-    if(FAILED(_device->CreateCommittedResource( &heapProperties,
+    if(FAILED(device->CreateCommittedResource( &heapProperties,
                                                 D3D12_HEAP_FLAG_NONE,
                                                 &resourceDesc,
                                                 D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -419,7 +474,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     // 頂点情報のコピー(マップ)
     // コピーしないとGPUに渡すことができない
-    DirectX::XMFLOAT3* _vertMap = nullptr;
+    Vertex* _vertMap = nullptr;
 
     // ID3D12Resource::Mapメソッド
     // 第一引数: ミップマップなどではないため0でよい　  ※リソース配列やミップマップの場合、サブリソース番号を渡す
@@ -451,7 +506,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // 設定は、バッファーのサイズ以外、頂点バッファーの設定を使い回してよい
     resourceDesc.Width = sizeof(indices);
 
-    result = _device->CreateCommittedResource(
+    result = device->CreateCommittedResource(
                                                 &heapProperties,
                                                 D3D12_HEAP_FLAG_NONE,
                                                 &resourceDesc,
@@ -562,6 +617,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // 渡される頂点データなどをどのように解釈するかをGPUに教えてあげるため
     D3D12_INPUT_ELEMENT_DESC _inputLayout[] = 
     {
+        // 座標情報
         {
             "POSITION",                                 // セマンティクス名(今回は座標なのでPOSITION)
             0,                                          // 同じセマンティクス名のときに使うインデックス(0でよい) ※要調べ
@@ -570,6 +626,16 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
             D3D12_APPEND_ALIGNED_ELEMENT,               // データが連続していることを表す定義としてALIGNED_ELEMENT
             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, // データの内容として、1頂点ごとにこのレイアウトが入っているを表す列挙※13.2.2で説明するらしい
             0                                           // 一度に描画するインスタンスの数(インスタンシングを使わないため0でよい)※13.2.2で説明するらしい
+        },
+        // uv (追加)
+        {
+            "TEXCOORD",
+            0,
+            DXGI_FORMAT_R32G32_FLOAT,
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
         },
     };
 
@@ -657,6 +723,10 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     // Flagsに「頂点情報（入力アセンブラ）がある」という意味の値を設定
     _rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    _rootSignatureDesc.pParameters = &rootParam;    // ルートパラメーターの先頭アドレス
+    _rootSignatureDesc.NumParameters = 1;           // ルートパラメーター数
+    _rootSignatureDesc.pStaticSamplers = &samplerDesc;
+    _rootSignatureDesc.NumStaticSamplers = 1;
 
     // バイナリコード作成
     ID3DBlob* _rootSigBlob = nullptr;
@@ -677,7 +747,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     }
 
     // ルートシグネチャーオブジェクト作成
-    result = _device->CreateRootSignature(
+    result = device->CreateRootSignature(
                                             0,      // nodemask 0でよい
                                             _rootSigBlob->GetBufferPointer(),
                                             _rootSigBlob->GetBufferSize(),
@@ -701,7 +771,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // グラフィックスパイプラインステートオブジェクト作成
     ID3D12PipelineState* _pipelineState = nullptr;
 
-    result = _device->CreateGraphicsPipelineState(&_graphicsPipelineDesc, IID_PPV_ARGS(&_pipelineState));
+    result = device->CreateGraphicsPipelineState(&_graphicsPipelineDesc, IID_PPV_ARGS(&_pipelineState));
 
     if (FAILED(result))
     {
@@ -801,6 +871,11 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         _cmdList->RSSetViewports(1, &_viewport);
         _cmdList->RSSetScissorRects(1, &_scissorRect);
         _cmdList->SetGraphicsRootSignature(_rootSignature);
+        _cmdList->SetDescriptorHeaps(1, &texDescHeap);
+        _cmdList->SetGraphicsRootDescriptorTable(
+                                                    0,                                                 // ルートパラメーターインデックス 
+                                                    texDescHeap->GetGPUDescriptorHandleForHeapStart()  // ヒープアドレス
+                                                );
 
         _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 

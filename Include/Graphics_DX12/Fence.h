@@ -28,7 +28,7 @@ namespace MFramework
 {
     namespace MGraphics_DX12
     {
-        class Fence
+        class Fence final
         {
             private:
                 Fence(const Fence&) = delete;
@@ -50,6 +50,9 @@ namespace MFramework
                 ComPtr<ID3D12Fence> m_fence;
                 HANDLE m_event;
                 UINT64 m_fenceCount;
+            
+            private:
+                bool m_isDisposed;
 
             private:
                 bool m_isInitialized;

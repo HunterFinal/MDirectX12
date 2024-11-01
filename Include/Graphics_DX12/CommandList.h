@@ -32,7 +32,7 @@ namespace MFramework
                 ~CommandList();
 
             public:
-                bool Init(ID3D12Device* device, ID3D12CommandAllocator* allocator);
+                bool Init(ID3D12Device* device);
 
                 void SetVertexBuffer(UINT startIndex, UINT vertBufferCnt, D3D12_VERTEX_BUFFER_VIEW* bufferView);
                 void SetIndexBuffers(D3D12_INDEX_BUFFER_VIEW* indexBufferView);
@@ -48,9 +48,6 @@ namespace MFramework
                 void SetViewport(UINT32 width, UINT32 height);
                 void SetScissorRect(UINT32 width, UINT32 height);
                 void SetRootSignature(ID3D12RootSignature* rootSignature);
-
-            // TODO
-            public:
                 void ClearScreen(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetView);
 
             private:
@@ -59,6 +56,8 @@ namespace MFramework
 
             private:
                 ComPtr<ID3D12GraphicsCommandList> m_commandList;
+                ComPtr<ID3D12CommandAllocator> m_commandAllocator;
+
                 D3D12_VIEWPORT m_viewport;
                 D3D12_RECT m_scissorRect;
         };

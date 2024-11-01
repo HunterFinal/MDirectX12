@@ -22,7 +22,9 @@ namespace MFramework
 {
     class IDisposable
     {
-        virtual void Dispose(void) = 0;
+        public:
+            virtual void Dispose(void) = 0;
+            virtual ~IDisposable() {}
     };
 }
 
