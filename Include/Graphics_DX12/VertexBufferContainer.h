@@ -29,7 +29,7 @@ Encoding : UTF-8
 
 namespace MFramework
 {
-    namespace MGraphics_DX12
+    inline namespace MGraphics_DX12
     {
         class VertexBufferContainer : public MFramework::IDisposable
         {
@@ -48,7 +48,7 @@ namespace MFramework
                 bool CreateVertexBuffer(ID3D12Device* device, DirectX::XMFLOAT3* verts, UINT32 vertCnt, UINT32* indices, UINT32 indexCnt);
 
             public:
-                void Dispose(void) override;
+                void Dispose(void) noexcept override;
 
             private:
                 std::vector<DirectX::XMFLOAT3> m_vertices;

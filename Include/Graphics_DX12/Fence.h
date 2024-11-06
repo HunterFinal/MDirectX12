@@ -26,7 +26,7 @@ Encoding : UTF-8
 
 namespace MFramework
 {
-    namespace MGraphics_DX12
+    inline namespace MGraphics_DX12
     {
         class Fence final
         {

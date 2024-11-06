@@ -2,7 +2,7 @@
 
 namespace MFramework
 {
-    namespace MGraphics_DX12
+    inline namespace MGraphics_DX12
     {
         Fence::Fence()
             : m_fence(nullptr)

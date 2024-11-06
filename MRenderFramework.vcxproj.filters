@@ -71,6 +71,12 @@
     <ClCompile Include="Source\Graphics_DX12\DX12Device.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\DX12DXGIFactory.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\CommandQueue.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Debugger\Debug.h">
@@ -111,6 +117,12 @@
     </ClInclude>
     <ClInclude Include="Include\Utilities\Class-Def-Macro.h">
       <Filter>Header File\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\CommandQueue.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\DX12DXGIFactory.h">
+      <Filter>Header File\Graphics_DX12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

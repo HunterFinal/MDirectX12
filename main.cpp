@@ -27,8 +27,8 @@ Version : alpha_1.0.0
 #include <d3d12.h>
 #include <dxgi1_6.h>
 
-#pragma comment(lib,"d3d12.lib")
-#pragma comment(lib,"dxgi.lib")
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
 
 #include <DirectXMath.h>
 
@@ -37,9 +37,17 @@ Version : alpha_1.0.0
 // shader compiler include
 #include <d3dcompiler.h>
 
-#pragma comment(lib,"d3dcompiler.lib")
+#pragma comment(lib, "d3dcompiler.lib")
 
 // end shader compiler include
+
+// DirectXTex lib include
+
+#include <DirectXTex.h>
+
+#pragma comment(lib, "DirectXTex.lib")
+
+// end DirectXTex lib include
 
 #include <vector>
 #include <string>
@@ -47,6 +55,9 @@ Version : alpha_1.0.0
 #pragma region DX12 Wrapper
 
 #include <Graphics_DX12/DX12Device.h>
+#include <Graphics_DX12/DX12DXGIFactory.h>
+#include <Graphics_DX12/CommandList.h>
+#include <Graphics_DX12/CommandQueue.h>
 #include <Graphics_DX12/Fence.h>
 
 #pragma endregion
@@ -62,6 +73,16 @@ struct Vertex
     DirectX::XMFLOAT2 uv;
 };
 
+/// @brief
+/// アライメントに揃えたサイズを返す
+/// @param size 元のサイズ
+/// @param alignment アラインメントサイズ
+/// @return アラインメントを揃えたサイズ
+size_t AlignmentedSize(size_t size, size_t alignment)
+{
+  return size + alignment - size % alignment;
+}
+
 #ifdef _DEBUG
 int main()
 #else
@@ -70,14 +91,6 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 {
     // メモリリークを知らせる
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-    // Window
-    MWindow::Window test;
-
-    if(!test.InitWnd(1920, 1080, L"GameWindow", L"Framework_Window_Title"))
-    {
-        return -1;
-    }
 
     #pragma region D3D12 DebugLayer
 
@@ -93,25 +106,24 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     #pragma endregion
     // end region of D3D12 DebugLayer
 
-    #pragma region D3D12 Adapter and Device
-    ComPtr<IDXGIFactory6> _dxgiFactory = nullptr;
+    // Window
+    MWindow::Window test;
 
-    // アダプターを列挙するためDXGIFactoryオブジェクトを作成 
-    HRESULT result = S_OK;
-
-#ifdef _DEBUG                           
-    result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(_dxgiFactory.GetAddressOf()));
-#else
-    result = CreateDXGIFactory1(IID_PPV_ARGS(_dxgiFactory.GetAddressOf()));
-#endif
-
-    if (FAILED(result))
+    if(!test.InitWnd(1920, 1080, L"GameWindow", L"Framework_Window_Title"))
     {
         return -1;
     }
 
+    #pragma region D3D12 Adapter and Device
+
+    // アダプターを列挙するためDXGIFactoryオブジェクトを作成 
+    HRESULT result = S_OK;
+
+    MFramework::DX12DXGIFactory dxgiFactory;
+    dxgiFactory.Init();
+
     MFramework::DX12Device device;
-    device.Init(_dxgiFactory.Get());
+    device.Init(dxgiFactory);
 
     #pragma endregion
     // end region of D3D12 Adapter and Device
@@ -120,58 +132,22 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // コマンドリストの作成とコマンドアロケーター
 
     const auto CMD_LIST_TYPE = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    const int FRAME_COUNT = 2;
     // 実際に命令をためているインターフェース
-    ID3D12CommandAllocator* _cmdAllocator = nullptr;
 
     // 命令のインターフェース
-    ID3D12GraphicsCommandList* _cmdList = nullptr;
+    MFramework::CommandList cmdList;
+    cmdList.Init(device, CMD_LIST_TYPE, FRAME_COUNT);
 
-    result = device->CreateCommandAllocator(CMD_LIST_TYPE, IID_PPV_ARGS(&_cmdAllocator));
-
-    // 生成失敗
-    if(result != S_OK)
-    {
-        return -1;
-    }
-
-    result = device->CreateCommandList(0, CMD_LIST_TYPE, _cmdAllocator, nullptr, IID_PPV_ARGS(&_cmdList));
-
-    // 生成失敗
-    if(result != S_OK)
-    {
-        return -1;
-    }
     #pragma endregion
     // end region of D3D12 CommandAllocator and CommandList
 
     #pragma region D3D12 CommandQueue
     // コマンドキュー
     // コマンドリストを用いてためた命令セットをGPUが順次実行していくためのもの
+    MFramework::CommandQueue cmdQueue;
+    cmdQueue.Init(device,CMD_LIST_TYPE);
 
-    ID3D12CommandQueue* _cmdQueue = nullptr;
-
-    D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
-
-    // タイムアウトなし
-    cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-
-    // アタブターを一つしか使わないときは0でよい
-    cmdQueueDesc.NodeMask = 0;
-
-    // 優先順位は特に指定なし
-    cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-
-    // コマンドリストと合わせる
-    cmdQueueDesc.Type = CMD_LIST_TYPE;
-
-    // キュー生成
-    result = device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&_cmdQueue));
-
-    // 生成失敗
-    if(result != S_OK)
-    {
-        return -1;
-    }
     #pragma endregion
     // end region of D3D12 CommandQueue
 
@@ -189,22 +165,18 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER;
     swapChainDesc.BufferCount = 2;
-
     // バックバッファーは伸び縮み可能
     swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
-
     // フリップ後は速やかに破棄
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-
     // 特に指定なし
     swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-
     // ウインドウ⇔フルスクリーン切り替え可能
     swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
     // TODO 大事
     // 本来はQueryInterfaceなどを用いて IDXGISwapChain4*への変換チェックをするが、わかりやすさ重視のためキャストで対応
-    result = _dxgiFactory->CreateSwapChainForHwnd(_cmdQueue, test.GetHWND(), &swapChainDesc, nullptr, nullptr, (IDXGISwapChain1**) &_swapChain);
+    result = dxgiFactory->CreateSwapChainForHwnd(cmdQueue, test.GetHWND(), &swapChainDesc, nullptr, nullptr, (IDXGISwapChain1**) &_swapChain);
 
     // 生成失敗
     if(result != S_OK)
@@ -251,13 +223,19 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     
     std::vector<ID3D12Resource*> _backBuffers(swcDesc.BufferCount);
 
+    // SRGBレンダーターゲットビュー設定
+    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+
+    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // ガンマ補正あり (sRGB)
+    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+
     // Get DescriptorHeap handle
     D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
 
     for(size_t i = 0; i < swcDesc.BufferCount; ++i)
     {
         result = _swapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&_backBuffers[i]));
-        device->CreateRenderTargetView(_backBuffers[i], nullptr, handle);
+        device->CreateRenderTargetView(_backBuffers[i], &rtvDesc, handle);
 
         // ハンドルサイズを計算し、先頭からずらす
         handle.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -268,7 +246,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     #pragma region D3D12 Fence
     // GPU側の処理が完了したかどうかを知るための仕組み
 
-    MFramework::MGraphics_DX12::Fence fence;
+    MFramework::Fence fence;
 
     fence.Init(device);
 
@@ -289,80 +267,180 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     };
     
     // テクスチャ
-    std::vector<MFramework::Color> textureData;
-    textureData.resize(256*256);
+    // WICテクスチャのロード
+    DirectX::TexMetadata metadata = {};
+    DirectX::ScratchImage scratchImg = {};
 
-    MUtility::MRandom::RandomGenerator<int> randomColorGenerator(0,255);
-
-    for (auto& color : textureData)
+    result = DirectX::LoadFromWICFile(
+                                       L"Assets/Images/textest.png",    // ファイルパス
+                                       DirectX::WIC_FLAGS_NONE,         // どのようにロードするかを示すフラグ
+                                       &metadata,                       // メタデータ(DirectX::TexMetadata)を受け取るためのポインター
+                                       scratchImg                       // 実際のデータが入っているオブジェクト
+                                     ); 
+    if (FAILED(result))
     {
-        color.R = randomColorGenerator.GenerateRandom();
-        color.G = randomColorGenerator.GenerateRandom();
-        color.B = randomColorGenerator.GenerateRandom();
-        color.A = 255;
+      return -1;
     }
 
-    // テクスチャバッファーをCPUからGPUに転送する方法：
-    // 1: ID3D12Resource::WriteToSubresource()メソッドを使う:比較的わかりやすいが特定の条件で効率が低下
-    // 2: ID3D12Resource::Map()メソッドと、ID3D12GraphicsCommandList::CopyTextureRegion()/CopyBufferRegionメソッドを利用する:推奨されている
+    const DirectX::Image* img = scratchImg.GetImage(0, 0, 0);  // 生のデータ抽出
 
-    // WriteToSubresourceで転送するためのヒープ設定
-    D3D12_HEAP_PROPERTIES textureHeapProperty = {};
+   
 
-    // 特殊な設定なのでDEFAULTでもUPLOADでもない
-    textureHeapProperty.Type = D3D12_HEAP_TYPE_CUSTOM;
+    // 中間バッファーとしてのアップロードヒープ設定
+    D3D12_HEAP_PROPERTIES uploadHeapProp = {};
 
-    // ライトバック
-    textureHeapProperty.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+    // マップ可能にするため、UPLOADにする
+    uploadHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
 
-    // 転送はL0、つまりCPU側から直接行う
-    textureHeapProperty.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+    // アップロード用に使用すること前提なのでUNKNOWNでよい
+    uploadHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    uploadHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 
-    // 単一アダプターのため0
-    textureHeapProperty.CreationNodeMask = 0;
-    textureHeapProperty.VisibleNodeMask = 0;
+    // 単一アダプターのため 0
+    uploadHeapProp.CreationNodeMask = 0;
+    uploadHeapProp.VisibleNodeMask = 0;
 
-    D3D12_RESOURCE_DESC textureResourceDesc = {};
+    D3D12_RESOURCE_DESC resDesc = {};
 
-    textureResourceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    textureResourceDesc.Width = 256;
-    textureResourceDesc.Height = 256;
-    textureResourceDesc.DepthOrArraySize = 1;                           // 2Dで配列でもないので1
-    textureResourceDesc.SampleDesc.Count = 1;                           // 通常テクスチャなのでアンチエイリアシングしない
-    textureResourceDesc.SampleDesc.Quality = 0;                         // クオリティは最低
-    textureResourceDesc.MipLevels = 1;                                  // ミップマップしないのでミップ数は一つ
-    textureResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    textureResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;          // レイアウトは決定しない
-    textureResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;               // 特にフラグなし
+    // 単なるデータの塊なのでUNKNOWN
+    resDesc.Format = DXGI_FORMAT_UNKNOWN;
+    // 単なるバッファーとして指定
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 
-    ID3D12Resource* texBuffer = nullptr;
+    // rowPitchが変わったためバッファーのサイズも変更しなければならない
+    // アラインメントされたサイズ*高さとする必要がある
+    resDesc.Width = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) * img->height;    // データサイズ
+    resDesc.Height = 1;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;  // 連続したデータ
+    resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;         // 特にフラグなし
+
+    resDesc.SampleDesc.Count = 1; //通常テクスチャなのでアンチエイリアシングしない
+    resDesc.SampleDesc.Quality = 0;
+
+    // 中間バッファー作成
+    ID3D12Resource* uploadBuffer = nullptr;
+
     result = device->CreateCommittedResource(
-                                                &textureHeapProperty,
-                                                D3D12_HEAP_FLAG_NONE,
-                                                &textureResourceDesc,
-                                                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, // テクスチャ用指定
-                                                nullptr,
-                                                IID_PPV_ARGS(&texBuffer)
-                                            ); 
+                                              &uploadHeapProp,
+                                              D3D12_HEAP_FLAG_NONE, //特にフラグなし
+                                              &resDesc,
+                                              D3D12_RESOURCE_STATE_GENERIC_READ,    // CPUから書き込み可能だが、GPUから見ると読み取り専用
+                                              nullptr,
+                                              IID_PPV_ARGS(&uploadBuffer)
+                                            );     
 
     if (FAILED(result))
     {
         return -1;
     }
 
-    // テクスチャバッファーの転送
-    result = texBuffer->WriteToSubresource(
-                                            0,                                                                  // サブリソースインデックス
-                                            nullptr,                                                            // 書き込み領域の指定(nullptrならば先頭から全領域となる)
-                                            textureData.data(),                                                 // 書き込みたいデータのアドレス(元データアドレス)
-                                            sizeof(MFramework::Color) * 256,                                    // 1ラインサイズ
-                                            sizeof(MFramework::Color) * static_cast<UINT>(textureData.size())   // 全サイズ
-                                          );
+    // テクスチャのためのヒープ設定
+    D3D12_HEAP_PROPERTIES texHeapProp = {};
+
+    texHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT; // テクスチャ用
+    texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    // 単一アダプターのため 0
+    texHeapProp.CreationNodeMask = 0;
+    texHeapProp.VisibleNodeMask = 0;
+
+    // リソース設定 (変数使いまわし)
+    resDesc.Format = metadata.format;
+    resDesc.Width = static_cast<UINT64>(metadata.width);
+    resDesc.Height = static_cast<UINT>(metadata.height);
+    resDesc.DepthOrArraySize = static_cast<UINT16>(metadata.arraySize);    // 2D配列でもないので1
+    resDesc.MipLevels = static_cast<UINT16>(metadata.mipLevels);           // ミップマップしないためミップ数は1つ
+    resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+    // テクスチャバッファー作成
+    ID3D12Resource* texBuffer = nullptr;
+
+    result = device->CreateCommittedResource(
+                                              &texHeapProp,
+                                              D3D12_HEAP_FLAG_NONE,
+                                              &resDesc,
+                                              D3D12_RESOURCE_STATE_COPY_DEST, // コピー先
+                                              nullptr,
+                                              IID_PPV_ARGS(&texBuffer)
+                                            );
 
     if (FAILED(result))
     {
         return -1;
     }
+
+    // アップロードリソースへのマップ
+    UINT8* mapforImg = nullptr; // img->pixelsと同じ型にする
+    result = uploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapforImg));
+
+    // 元データをコピーする際に、元データのRowPitchとバッファーのRowPitchが合わないため、
+    // 一行ごとにコピーして行頭が合うようにする
+    UINT8* srcAddress = img->pixels;
+
+    size_t rowPitch = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+
+    for (int y = 0; y < img->height; ++y)
+    {
+      std::copy_n(srcAddress, rowPitch, mapforImg);
+
+      // 一行ごとの辻褄を合わせる
+      srcAddress += img->rowPitch;
+      mapforImg += rowPitch;
+    }
+
+    uploadBuffer->Unmap(0, nullptr); //アンマップ
+
+    D3D12_TEXTURE_COPY_LOCATION src = {};
+
+    // コピー元(アップロード側)設定
+    src.pResource = uploadBuffer;   // 中間バッファー
+    // D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINTの場合、pResourceはバッファーリソースを指す必要がある
+    // D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEXの場合、pResourceはテクスチャリソースを指す必要がある
+    src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;  // フットプリント指定
+    src.PlacedFootprint.Offset = 0;
+    src.PlacedFootprint.Footprint.Width = static_cast<UINT>(metadata.width);
+    src.PlacedFootprint.Footprint.Height = static_cast<UINT>(metadata.height);
+    src.PlacedFootprint.Footprint.Depth = static_cast<UINT>(metadata.depth);
+    // ここが重要
+    // RowPitchが256の倍数でないとCopyTextureRegionの実行は失敗する
+    // 256アライメントにする
+    src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));
+    src.PlacedFootprint.Footprint.Format = img->format;
+
+    D3D12_TEXTURE_COPY_LOCATION dst = {};
+
+    // コピー先設定
+    dst.pResource = texBuffer;
+    dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dst.SubresourceIndex = 0;
+
+    {
+      cmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+
+      D3D12_RESOURCE_BARRIER barrierDesc = {};
+
+      barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+      barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+      barrierDesc.Transition.pResource = texBuffer;
+      barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+      barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;    // ここが重要
+      barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE; // ここが重要
+
+      cmdList->ResourceBarrier(1, &barrierDesc);
+      cmdList->Close();
+
+      // コマンドリストの実行
+      ID3D12CommandList* cmdLists[] = { cmdList };
+      cmdQueue.Execute(1, cmdLists);
+
+      fence.Wait(cmdQueue);
+
+      cmdList.Reset(0);
+     }
 
     // テクスチャディスクリプタヒープ作成
     ID3D12DescriptorHeap* texDescHeap = nullptr;
@@ -391,7 +469,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // シェーダーリソースビューを作成
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;                                // RGBA(0.0f~1.0fに正規化)
+    srvDesc.Format = metadata.format;                                           // RGBA(0.0f~1.0fに正規化)
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;                      // 2Dテクスチャ
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING; // データのRGBAをどのようにマッピングするかということを指定するためのもの
                                                                                 // 画像の情報がそのままRGBAなど「指定されたフォーマットに、
@@ -536,7 +614,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // 第一引数:※頂点バッファーの設定を開始するには、デバイスの 0 から始まる配列にインデックスを作成します。
     // 第二引数:渡す頂点バッファービューの数
     // 第三引数:頂点バッファービューの配列の先頭アドレス
-    _cmdList->IASetVertexBuffers(0, 1, &_vertexBufferView);
+    cmdList->IASetVertexBuffers(0, 1, &_vertexBufferView);
 
     // Shaderオブジェクトを作成
     // ID3DBlobは　Binary Large Objectの略称、「何かのデータの塊」として使われている「汎用型」のオブジェクトです
@@ -833,10 +911,10 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         // バリア指定実行
         // 第一引数:設定バリアの数(現時点では1でよい)
         // 第二引数:設定バリア構造体アドレス(配列で同時に設定できる)
-        _cmdList->ResourceBarrier(1, &barrierDesc);
+        cmdList->ResourceBarrier(1, &barrierDesc);
 
         // パイプラインステートを設定
-        _cmdList->SetPipelineState(_pipelineState); 
+        cmdList->SetPipelineState(_pipelineState); 
 
         
         // 後の流れ:
@@ -853,7 +931,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         // 第二引数:レンダーターゲットハンドル先頭アドレス
         // TODO 第三引数:複数時に連続しているか
         // 第四引数:深度ステンシルバッファービューのハンドル(nullptrでよい)
-        _cmdList->OMSetRenderTargets(1, &rtvHeap, false, nullptr);
+        cmdList->OMSetRenderTargets(1, &rtvHeap, false, nullptr);
 
         // 画面クリア
         float r = 0.0f;
@@ -863,28 +941,28 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         g = static_cast<float>((0xff & frame >> 8) / 255.0f);
         b = static_cast<float>((0xff & frame >> 0) / 255.0f);
         float clearColor[] = {r, g, b, 1.f};
-        _cmdList->ClearRenderTargetView(rtvHeap, clearColor, 0, nullptr);
+        cmdList->ClearRenderTargetView(rtvHeap, clearColor, 0, nullptr);
 
         ++frame;
 
         // ルートシグネチャー設定
-        _cmdList->RSSetViewports(1, &_viewport);
-        _cmdList->RSSetScissorRects(1, &_scissorRect);
-        _cmdList->SetGraphicsRootSignature(_rootSignature);
-        _cmdList->SetDescriptorHeaps(1, &texDescHeap);
-        _cmdList->SetGraphicsRootDescriptorTable(
+        cmdList->SetGraphicsRootSignature(_rootSignature);
+        cmdList->SetDescriptorHeaps(1, &texDescHeap);
+        cmdList->RSSetViewports(1, &_viewport);
+        cmdList->RSSetScissorRects(1, &_scissorRect);
+        cmdList->SetGraphicsRootDescriptorTable(
                                                     0,                                                 // ルートパラメーターインデックス 
                                                     texDescHeap->GetGPUDescriptorHandleForHeapStart()  // ヒープアドレス
                                                 );
 
-        _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         // 頂点バッファーを設定
         // 第一引数:スロット番号
         // 第二引数:頂点バッファービューの数
         // 第三引数:頂点バッファービューの配列
-        _cmdList->IASetVertexBuffers(0, 1, &_vertexBufferView);
-        _cmdList->IASetIndexBuffer(&_indexBufferView);
+        cmdList->IASetVertexBuffers(0, 1, &_vertexBufferView);
+        cmdList->IASetIndexBuffer(&_indexBufferView);
         
         // 描画命令を設定
         // 第一引数:頂点数
@@ -892,30 +970,29 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         // 第三引数:頂点データのオフセット
         // 第四引数:インスタンスのオフセット
         // ※インスタンス数は同じプリミティブをいくつ表示するかという意味です
-        _cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+        cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
         barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;    // 直前はレンダーターゲット状態
         barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;           // 今からPRESENT状態
-        _cmdList->ResourceBarrier(1, &barrierDesc);
+        cmdList->ResourceBarrier(1, &barrierDesc);
 
         // ためておいた命令を実行
         // その前に命令をクローズが必須
-        _cmdList->Close();
+        cmdList->Close();
 
         // 命令の実行
-        ID3D12CommandList* cmdLists[] = { _cmdList };
+        ID3D12CommandList* cmdLists[] = { cmdList };
 
         // 第一引数:実行するコマンドリストの数(1でよい)
         // 第二引数:コマンドリスト配列の先頭アドレス
-        _cmdQueue->ExecuteCommandLists(1, cmdLists);
+        cmdQueue.Execute(1, cmdLists);
 
         // フェンスを使ってGPUの処理が終わるまで待つ
-        fence.Wait(_cmdQueue);
+        fence.Wait(cmdQueue);
 
         // リセットし、命令オブジェクトをためていく
         // コマンドリストのクローズ状態を解除
-        _cmdAllocator->Reset();
-        _cmdList->Reset(_cmdAllocator, _pipelineState);
+        cmdList.Reset(static_cast<int>(backBufferIndex), _pipelineState);
 
         // フリップ
         // 第一引数:フリップまでの待ちフレーム数
@@ -932,6 +1009,10 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // end region of Main Loop
 
     test.Dispose();
+    device.Dispose();
+    dxgiFactory.Dispose();
+    cmdList.Dispose();
+    cmdQueue.Dispose();
 
     return 0;
 }

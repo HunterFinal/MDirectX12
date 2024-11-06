@@ -13,33 +13,47 @@ Encoding : UTF-8
 
 */
 
+#pragma once
+
 #ifndef M_DX12_DEVICE
 #define M_DX12_DEVICE
 
 #include <ComPtr.h>
 #include <Class-Def-Macro.h>
+#include <Interfaces/IDisposable.h>
 
 struct ID3D12Device;
 struct IDXGIFactory6;
 
 namespace MFramework
 {
-  class DX12Device final
+  inline namespace MGraphics_DX12
   {
-    GENERATE_CLASS_NO_COPY(DX12Device)
+    class DX12Device final : public IDisposable
+    {
+      GENERATE_CLASS_NO_COPY(DX12Device)
 
-    public:
-      void Init(IDXGIFactory6*);
+      public:
+        /// @brief 
+        /// 初期化する
+        /// @param  
+        void Init(IDXGIFactory6*);
 
-    public:
-      ID3D12Device* GetDevice();
-      operator ID3D12Device*() const noexcept;
-      ID3D12Device* operator->() const noexcept;
-    private:
-      ComPtr<ID3D12Device> m_device;
-  };
+      public:
+        void Dispose(void) noexcept override;
 
-  inline ID3D12Device* DX12Device::GetDevice()
+      public:
+        ID3D12Device* GetDevice(void) const;
+        operator ID3D12Device*() const noexcept;
+        ID3D12Device* operator->() const noexcept;
+
+      private:
+        ComPtr<ID3D12Device> m_device;
+    };
+  }
+  // MGraphics_DX12
+
+  inline ID3D12Device* DX12Device::GetDevice() const
   {
     return m_device.Get();
   }
@@ -54,5 +68,7 @@ namespace MFramework
     return m_device.Get();
   }
 }
+// MFramework
 
 #endif
+// M_DX12_DEVICE

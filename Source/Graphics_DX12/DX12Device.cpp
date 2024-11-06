@@ -26,54 +26,37 @@ Encoding : UTF-8
 
 namespace
 {
-    enum class GPULevel : INT8
-    {
-        NVIDIA      = 5,
-        Amd         = 4,
-        Intel       = 3,
-        Arm         = 2,
-        Qualcomm    = 1,
+  enum class GPULevel : INT8
+  {
+      NVIDIA      = 5,
+      Amd         = 4,
+      Intel       = 3,
+      Arm         = 2,
+      Qualcomm    = 1,
 
-        Lowest      = -128,
-    };
-    
-    D3D_FEATURE_LEVEL levels[] = 
-    {
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0,
-    };
-}
-
-namespace MFramework
-{
-  DX12Device::DX12Device()
-    : m_device(nullptr)
-  { }
+      Lowest      = -128,
+  };
   
-  DX12Device::~DX12Device()
+  D3D_FEATURE_LEVEL levels[] = 
   {
-    m_device.Reset();
-  }
+    D3D_FEATURE_LEVEL_12_2,
+    D3D_FEATURE_LEVEL_12_1,
+    D3D_FEATURE_LEVEL_12_0,
+    D3D_FEATURE_LEVEL_11_1,
+    D3D_FEATURE_LEVEL_11_0,
+  };
 
-  void DX12Device::Init(IDXGIFactory6* _dxgiFactory)
+  void GetAdapter(IDXGIFactory6* dxgiFactory, IDXGIAdapter** adapter)
   {
-    if (m_device.Get() != nullptr)
-    {
-      return;
-    }
-
-    assert(_dxgiFactory != nullptr);
-   
     // 利用可能なアタブターの列挙用
     std::vector<IDXGIAdapter*> adapters;
+    adapters.reserve(5);
 
     IDXGIAdapter* tmpAdapter = nullptr;
 
     int adapterIndex = 0;
     // アタブターを探す
-    while(_dxgiFactory->EnumAdapters(adapterIndex, &tmpAdapter) != DXGI_ERROR_NOT_FOUND)
+    while (dxgiFactory->EnumAdapters(adapterIndex, &tmpAdapter) != DXGI_ERROR_NOT_FOUND)
     {
       adapters.emplace_back(tmpAdapter);
       ++adapterIndex;
@@ -82,7 +65,6 @@ namespace MFramework
     tmpAdapter = nullptr;
 
     GPULevel level = GPULevel::Lowest;
-
     // アダプターを識別するための情報を取得
     for(const auto& adpt : adapters)
     {
@@ -97,7 +79,7 @@ namespace MFramework
         if (level < GPULevel::NVIDIA)
         {
           level = GPULevel::NVIDIA;
-          tmpAdapter = adpt;
+          *adapter = adpt;
         }
       }
       else if (strDesc.find(L"Amd") != std::wstring::npos)
@@ -105,7 +87,7 @@ namespace MFramework
         if (level < GPULevel::Amd)
         {
           level = GPULevel::Amd;
-          tmpAdapter = adpt;
+          *adapter = adpt;
         }
       }
       else if (strDesc.find(L"Intel") != std::wstring::npos)
@@ -113,7 +95,7 @@ namespace MFramework
         if (level < GPULevel::Intel)
         {
           level = GPULevel::Intel;
-          tmpAdapter = adpt;
+          *adapter = adpt;
         }
       }
       else if (strDesc.find(L"Arm") != std::wstring::npos)
@@ -121,7 +103,7 @@ namespace MFramework
         if (level < GPULevel::Arm)
         {
           level = GPULevel::Arm;
-          tmpAdapter = adpt;
+          *adapter = adpt;
         }
       }
       else if (strDesc.find(L"Qualcomm") != std::wstring::npos)
@@ -129,19 +111,49 @@ namespace MFramework
         if (level < GPULevel::Qualcomm)
         {
           level = GPULevel::Qualcomm;
-          tmpAdapter = adpt;
+          *adapter = adpt;
         }
       }
     }
+  }
+}
 
-    for(auto lv : levels)
+namespace MFramework
+{
+  DX12Device::DX12Device()
+    : m_device(nullptr)
+  { }
+  
+  DX12Device::~DX12Device()
+  {
+    Dispose();
+  }
+
+  void DX12Device::Init(IDXGIFactory6* _dxgiFactory)
+  {
+    if (m_device.Get() != nullptr)
     {
-      if(D3D12CreateDevice(tmpAdapter, lv, IID_PPV_ARGS(m_device.GetAddressOf())) == S_OK)
+      return;
+    }
+
+    assert(_dxgiFactory != nullptr);
+   
+    IDXGIAdapter* foundAdapter = nullptr;
+    GetAdapter(_dxgiFactory, &foundAdapter);
+
+    for (auto lv : levels)
+    {
+      if (D3D12CreateDevice(foundAdapter, lv, IID_PPV_ARGS(m_device.GetAddressOf())) == S_OK)
       {
         break;
       }
     }
 
     assert(m_device.Get() != nullptr);
+  }
+
+  void DX12Device::Dispose() noexcept
+  {
+    m_device.Reset();
   }
 }

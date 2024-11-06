@@ -37,17 +37,14 @@ namespace
 }
 namespace MWindow
 {
-    // TODO temp
     Window::Window()
         : m_handleWindow(nullptr)
         , m_hInstance(nullptr)
-        , m_className()
+        , m_className(L"")
         , m_isTerminated(false)
         , m_width(0)
         , m_height(0)
-    {
-        
-    }
+    { }
 
     Window::~Window()
     {
@@ -146,7 +143,7 @@ namespace MWindow
         return true;
     }
 
-    void Window::Dispose()
+    void Window::Dispose() noexcept
     {
         if (m_hInstance != nullptr)
         {
@@ -213,7 +210,6 @@ namespace MWindow
             This = reinterpret_cast<Window*>(create->lpCreateParams);
             This->m_handleWindow = hWnd;
             SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)This);
-
         }
         else
         {

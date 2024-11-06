@@ -18,6 +18,7 @@ Version : alpha_1.0.0
 
 #include <Windows.h>
 #include <string>
+#include <Class-Def-Macro.h>
 
 #include <Interfaces/IDisposable.h>
 
@@ -33,21 +34,15 @@ namespace MWindow
 {
     class Window : public IWindowInfo , public MFramework::IDisposable
     {
-        public:
-            Window();
-            ~Window();
+        GENERATE_CLASS_NO_COPY(Window)
             
         public:
             bool InitWnd(UINT32 width, UINT32 height, const wchar_t* className, const wchar_t* wndTitle);
-            void Dispose(void);
+            void Dispose(void) noexcept override;
             HWND GetHWND(void) const;
             UINT32 GetWidth(void) const;
             UINT32 GetHeight(void) const;
 
-        // コピー禁止    
-        private:
-            Window(const Window& other) = delete;
-            Window operator=(const Window& other) = delete;
 
         // スタティック関数
         private:

@@ -3,7 +3,7 @@
 MRenderFramework
 Author : MAI ZHICONG
 
-Description : RenderFramework used by Game (Graphics API: DirectX12)
+Description : DirectX12 CommandList Wrapper (Graphics API: DirectX12)
 
 Update History: 2024/09/19 Create
                 2024/09/26 Update constructor
@@ -15,53 +15,64 @@ Encoding : UTF-8
 
 */
 
-#ifndef M_CMDLIST
-#define M_CMDLIST 1
+#pragma once
 
-#include <d3d12.h>
+#ifndef M_DX12_COMMANDLIST
+#define M_DX12_COMMANDLIST
+
 #include <ComPtr.h>
+#include <vector>
+#include <Class-Def-Macro.h>
+#include <Interfaces/IDisposable.h>
+
+struct ID3D12Device;
+struct ID3D12GraphicsCommandList;
+struct ID3D12CommandAllocator;
+struct ID3D12PipelineState;
+
+enum D3D12_COMMAND_LIST_TYPE;
 
 namespace MFramework
 {
-    namespace MGraphics_DX12
+  inline namespace MGraphics_DX12
+  {
+    class CommandList final : public IDisposable
     {
-        class CommandList
-        {
-            public:
-                CommandList();
-                ~CommandList();
+      GENERATE_CLASS_NO_COPY(CommandList)
 
-            public:
-                bool Init(ID3D12Device* device);
+      public:
+        void Init(ID3D12Device*, D3D12_COMMAND_LIST_TYPE, int);
+        void Reset(int, ID3D12PipelineState* = nullptr);
 
-                void SetVertexBuffer(UINT startIndex, UINT vertBufferCnt, D3D12_VERTEX_BUFFER_VIEW* bufferView);
-                void SetIndexBuffers(D3D12_INDEX_BUFFER_VIEW* indexBufferView);
-                void SetBarrier(UINT barrierCnt, D3D12_RESOURCE_BARRIER* barrier);
-                void SetPipelineState(ID3D12PipelineState* pipelineState);
-                void SetRenderTargets(
-                                        UINT targetCnt,
-                                        D3D12_CPU_DESCRIPTOR_HANDLE* heapStart,
-                                        bool RTsSingleHandleToDescriptorRange, 
-                                        D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDesctriptor
-                                     );
+      public:
+        void Dispose(void) noexcept override;
 
-                void SetViewport(UINT32 width, UINT32 height);
-                void SetScissorRect(UINT32 width, UINT32 height);
-                void SetRootSignature(ID3D12RootSignature* rootSignature);
-                void ClearScreen(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetView);
+      public:
+        ID3D12GraphicsCommandList* GetCommandList() const;
+        operator ID3D12GraphicsCommandList*() const noexcept;
+        ID3D12GraphicsCommandList* operator->() const noexcept;
 
-            private:
-                CommandList(const CommandList& other) = delete;
-                CommandList& operator=(const CommandList& other) = delete;
+      private:
+        ComPtr<ID3D12GraphicsCommandList> m_commandList;
+        std::vector<ComPtr<ID3D12CommandAllocator>> m_commandAllocators;
 
-            private:
-                ComPtr<ID3D12GraphicsCommandList> m_commandList;
-                ComPtr<ID3D12CommandAllocator> m_commandAllocator;
+    };
 
-                D3D12_VIEWPORT m_viewport;
-                D3D12_RECT m_scissorRect;
-        };
+    inline ID3D12GraphicsCommandList* CommandList::GetCommandList() const
+    {
+      return m_commandList.Get();
     }
+
+    inline CommandList::operator ID3D12GraphicsCommandList*() const noexcept
+    {
+      return m_commandList.Get();
+    }
+
+    inline ID3D12GraphicsCommandList* CommandList::operator->() const noexcept
+    {
+      return m_commandList.Get();
+    }
+  }
 }
 
 #endif

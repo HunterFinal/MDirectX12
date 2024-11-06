@@ -19,7 +19,7 @@ Encoding : UTF-8
 
 namespace MFramework
 {
-    namespace MGraphics_DX12
+    inline namespace MGraphics_DX12
     {
         VertexBufferContainer::VertexBufferContainer()
             : m_vertices()
@@ -124,7 +124,7 @@ namespace MFramework
             return true;
         }
 
-        void VertexBufferContainer::Dispose()
+        void VertexBufferContainer::Dispose() noexcept
         {
             m_vertices.clear();
             m_vertices.shrink_to_fit();
