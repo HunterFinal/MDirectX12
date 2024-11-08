@@ -129,21 +129,19 @@ namespace MFramework
     Dispose();
   }
 
-  void DX12Device::Init(IDXGIFactory6* _dxgiFactory)
+  void DX12Device::Init(IDXGIFactory6* dxgiFactory)
   {
-    if (m_device.Get() != nullptr)
+    if (dxgiFactory == nullptr)
     {
       return;
     }
-
-    assert(_dxgiFactory != nullptr);
    
     IDXGIAdapter* foundAdapter = nullptr;
-    GetAdapter(_dxgiFactory, &foundAdapter);
+    GetAdapter(dxgiFactory, &foundAdapter);
 
     for (auto lv : levels)
     {
-      if (D3D12CreateDevice(foundAdapter, lv, IID_PPV_ARGS(m_device.GetAddressOf())) == S_OK)
+      if (D3D12CreateDevice(foundAdapter, lv, IID_PPV_ARGS(m_device.ReleaseAndGetAddressOf())) == S_OK)
       {
         break;
       }

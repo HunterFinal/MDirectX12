@@ -14,21 +14,14 @@ Version : alpha_1.0.0
 #pragma once
 
 #ifndef M_WINDOW
-#define M_WINDOW 1
+#define M_WINDOW
 
 #include <Windows.h>
 #include <string>
+
 #include <Class-Def-Macro.h>
-
 #include <Interfaces/IDisposable.h>
-
-class IWindowInfo
-{
-    public:
-        virtual HWND GetHWND(void) const = 0;
-        virtual UINT32 GetWidth(void) const = 0;
-        virtual UINT32 GetHeight(void) const = 0;
-};
+#include <Interfaces/IWindowInfo.h>
 
 namespace MWindow
 {
@@ -42,7 +35,6 @@ namespace MWindow
             HWND GetHWND(void) const;
             UINT32 GetWidth(void) const;
             UINT32 GetHeight(void) const;
-
 
         // スタティック関数
         private:

@@ -149,7 +149,10 @@
     <ClCompile Include="Source\Graphics_DX12\CommandQueue.cpp" />
     <ClCompile Include="Source\Graphics_DX12\DX12Device.cpp" />
     <ClCompile Include="Source\Graphics_DX12\DX12DXGIFactory.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\DX12SwapChain.cpp" />
     <ClCompile Include="Source\Graphics_DX12\Fence.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\IndexBufferContainer.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\RootSignature.cpp" />
     <ClCompile Include="Source\Graphics_DX12\VertexBufferContainer.cpp" />
     <ClCompile Include="Source\Window\BaseWindow.cpp" />
   </ItemGroup>
@@ -161,7 +164,9 @@
     <ClInclude Include="Include\Graphics_DX12\CommandQueue.h" />
     <ClInclude Include="Include\Graphics_DX12\DX12Device.h" />
     <ClInclude Include="Include\Graphics_DX12\DX12DXGIFactory.h" />
+    <ClInclude Include="Include\Graphics_DX12\DX12SwapChain.h" />
     <ClInclude Include="Include\Graphics_DX12\Fence.h" />
+    <ClInclude Include="Include\Graphics_DX12\RootSignature.h" />
     <ClInclude Include="Include\Graphics_DX12\VertexBufferContainer.h" />
     <ClInclude Include="Include\Utilities\Base-Def-Macro.h" />
     <ClInclude Include="Include\Utilities\Class-Def-Macro.h" />
@@ -183,13 +188,13 @@
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">BasicPS</EntryPointName>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">BasicPS</EntryPointName>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
     </FxCompile>
     <FxCompile Include="Shaders\HLSLs\BasicVertexShader.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">BasicVS</EntryPointName>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">BasicVS</EntryPointName>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
     </FxCompile>

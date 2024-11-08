@@ -15,9 +15,7 @@ Encoding : UTF-8
 #include <Graphics_DX12/CommandQueue.h>
 
 #include <d3d12.h>
-#include <dxgi1_6.h>
 #pragma comment(lib,"d3d12.lib")
-#pragma comment(lib,"dxgi.lib")
 
 #include <cassert>
 
@@ -34,11 +32,6 @@ namespace MFramework
 
   void CommandQueue::Init(ID3D12Device* device, D3D12_COMMAND_LIST_TYPE type)
   {
-    if (m_commandQueue.Get() != nullptr)
-    {
-      return;
-    }
-
     if (device == nullptr)
     {
       return;
@@ -55,7 +48,7 @@ namespace MFramework
     cmdQueueDesc.Type = type;
 
     HRESULT result = S_OK;
-    result = device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(m_commandQueue.GetAddressOf()));
+    result = device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(m_commandQueue.ReleaseAndGetAddressOf()));
 
     assert(SUCCEEDED(result));
   }
@@ -67,12 +60,7 @@ namespace MFramework
       return;
     }
 
-    if (numCommandList <= 0)
-    {
-      return;
-    }
-
-    if (commandLists == nullptr)
+    if (numCommandList <= 0 || commandLists == nullptr)
     {
       return;
     }

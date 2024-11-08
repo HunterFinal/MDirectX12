@@ -3,9 +3,9 @@
 MRenderFramework
 Author : MAI ZHICONG
 
-Description : VertexBuffer Container (Graphics API: DirectX12)
+Description : IndexBuffer Container (Graphics API: DirectX12)
 
-Update History: 2024/09/19 Create
+Update History: 2024/11/08 Create
 
 Version : alpha_1.0.0
 
@@ -13,7 +13,7 @@ Encoding : UTF-8
 
 */
 
-#include <Graphics_DX12/VertexBufferContainer.h>
+#include <Graphics_DX12/IndexBufferContainer.h>
 
 #include <cassert>
 
@@ -21,19 +21,19 @@ namespace MFramework
 {
   inline namespace MGraphics_DX12
   {
-    VertexBufferContainer::VertexBufferContainer()
-      : m_vertBuffer(nullptr)
-      , m_vertBufferView()
+    IndexBufferContainer::IndexBufferContainer()
+      : m_idxBuffer(nullptr)
+      , m_idxBufferView()
     { 
-      memset(&m_vertBufferView, 0, sizeof(m_vertBufferView));
+      memset(&m_idxBufferView, 0, sizeof(m_idxBufferView));
     }
 
-    VertexBufferContainer::~VertexBufferContainer()
+    IndexBufferContainer::~IndexBufferContainer()
     {
       Dispose();
     }
 
-    bool VertexBufferContainer::Create(ID3D12Device* device, size_t size, size_t stride, const void* srcData)
+    bool IndexBufferContainer::Create(ID3D12Device* device, size_t size, size_t stride, const void* srcData)
     {
       if (device == nullptr)
       {
@@ -53,7 +53,7 @@ namespace MFramework
         heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;                       // CPUからアクセスできる（Mapできる）※DEFAULTより遅い
         heapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;   // TypeはCUSTOMじゃないためUNKNOWNでよい
         heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;    // TypeはCUSTOMじゃないためUNKNOWNでよい
-        heapProp.CreationNodeMask = 1;  // 0 と同じ意味
+        heapProp.CreationNodeMask = 1; // 0 と同じ意味
         heapProp.VisibleNodeMask = 1;
 
         // 頂点バッファー情報
@@ -77,7 +77,7 @@ namespace MFramework
                                                   &resourceDesc,
                                                   D3D12_RESOURCE_STATE_GENERIC_READ,
                                                   nullptr,
-                                                  IID_PPV_ARGS(m_vertBuffer.ReleaseAndGetAddressOf())
+                                                  IID_PPV_ARGS(m_idxBuffer.ReleaseAndGetAddressOf())
                                                 );
         // 作成失敗
         if (FAILED(result))
@@ -86,9 +86,9 @@ namespace MFramework
         }
 
         // ビュー作成
-        m_vertBufferView.BufferLocation = m_vertBuffer->GetGPUVirtualAddress(); // バッファーの仮想アドレス
-        m_vertBufferView.SizeInBytes = static_cast<UINT>(size);                 // 頂点の全バイト数
-        m_vertBufferView.StrideInBytes = static_cast<UINT>(stride);             // 一頂点あたりのバイト数
+        m_idxBufferView.BufferLocation = m_idxBuffer->GetGPUVirtualAddress();
+        m_idxBufferView.SizeInBytes = static_cast<UINT>(size);
+        m_idxBufferView.Format = DXGI_FORMAT_R16_UINT;
 
         // ID3D12Resource::Mapメソッド
         // 第一引数: ミップマップなどではないため0でよい　  ※リソース配列やミップマップの場合、サブリソース番号を渡す
@@ -97,28 +97,28 @@ namespace MFramework
 
         if (srcData != nullptr)
         {
-          void* vertMap = nullptr;
+          void* idxMap = nullptr;
 
-          result = m_vertBuffer->Map(0, nullptr, &vertMap);
+          result = m_idxBuffer->Map(0, nullptr, &idxMap);
 
           if (FAILED(result))
           {
             return false;
           }
 
-          memcpy_s(vertMap, size, srcData, size);
+          memcpy_s(idxMap, size, srcData, size);
 
-          m_vertBuffer->Unmap(0, nullptr);
+          m_idxBuffer->Unmap(0, nullptr);
         }
       }
 
       return true;
     }
 
-    void VertexBufferContainer::Dispose() noexcept
+    void IndexBufferContainer::Dispose() noexcept
     {
-      m_vertBuffer.Reset();
-      memset(&m_vertBufferView, 0, sizeof(m_vertBufferView));
+      m_idxBuffer.Reset();
+      memset(&m_idxBufferView, 0, sizeof(m_idxBufferView));
     }
   }
 }

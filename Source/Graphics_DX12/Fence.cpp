@@ -1,5 +1,10 @@
 #include <Graphics_DX12/Fence.h>
 
+#include <d3d12.h>
+#pragma comment(lib,"d3d12.lib")
+
+#include <cassert>
+
 namespace MFramework
 {
     inline namespace MGraphics_DX12
@@ -9,9 +14,7 @@ namespace MFramework
             , m_event(nullptr)
             , m_fenceCount(0)
             , m_isInitialized(false)
-        {
-
-        }
+        { }
 
         Fence::~Fence()
         {

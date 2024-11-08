@@ -5,9 +5,7 @@ Author : MAI ZHICONG
 
 Description : DirectX12 CommandList Wrapper (Graphics API: DirectX12)
 
-Update History: 2024/09/19 Create
-                2024/09/26 Update constructor
-                           Create virtual WndProc
+Update History: 2024/11/06 Create
 
 Version : alpha_1.0.0
 
@@ -48,8 +46,7 @@ namespace MFramework
         void Dispose(void) noexcept override;
 
       public:
-        ID3D12GraphicsCommandList* GetCommandList() const;
-        operator ID3D12GraphicsCommandList*() const noexcept;
+        ID3D12GraphicsCommandList* Get(void) const;
         ID3D12GraphicsCommandList* operator->() const noexcept;
 
       private:
@@ -58,12 +55,7 @@ namespace MFramework
 
     };
 
-    inline ID3D12GraphicsCommandList* CommandList::GetCommandList() const
-    {
-      return m_commandList.Get();
-    }
-
-    inline CommandList::operator ID3D12GraphicsCommandList*() const noexcept
+    inline ID3D12GraphicsCommandList* CommandList::Get(void) const
     {
       return m_commandList.Get();
     }

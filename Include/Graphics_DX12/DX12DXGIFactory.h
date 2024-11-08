@@ -42,20 +42,14 @@ namespace MFramework
         void Dispose(void) noexcept override;
 
       public:
-        IDXGIFactory6* GetFactory(void) const;
-        operator IDXGIFactory6*() const noexcept;
+        IDXGIFactory6* Get(void) const;
         IDXGIFactory6* operator->() const noexcept;
       private:
         ComPtr<IDXGIFactory6> m_dxgiFactory;
     };
   }
 
-  inline IDXGIFactory6* DX12DXGIFactory::GetFactory() const
-  {
-    return m_dxgiFactory.Get();
-  }
-
-  inline DX12DXGIFactory::operator IDXGIFactory6*() const noexcept
+  inline IDXGIFactory6* DX12DXGIFactory::Get(void) const
   {
     return m_dxgiFactory.Get();
   }

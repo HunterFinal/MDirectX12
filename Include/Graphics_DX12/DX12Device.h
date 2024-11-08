@@ -43,8 +43,7 @@ namespace MFramework
         void Dispose(void) noexcept override;
 
       public:
-        ID3D12Device* GetDevice(void) const;
-        operator ID3D12Device*() const noexcept;
+        ID3D12Device* Get(void) const;
         ID3D12Device* operator->() const noexcept;
 
       private:
@@ -53,12 +52,7 @@ namespace MFramework
   }
   // MGraphics_DX12
 
-  inline ID3D12Device* DX12Device::GetDevice() const
-  {
-    return m_device.Get();
-  }
-
-  inline DX12Device::operator ID3D12Device*() const noexcept
+  inline ID3D12Device* DX12Device::Get() const
   {
     return m_device.Get();
   }

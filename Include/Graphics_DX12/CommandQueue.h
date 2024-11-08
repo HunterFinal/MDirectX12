@@ -47,8 +47,7 @@ namespace MFramework
         void Dispose(void) noexcept override;
 
       public:
-        ID3D12CommandQueue* GetCommandQueue(void) const;
-        operator ID3D12CommandQueue*() const noexcept;
+        ID3D12CommandQueue* Get(void) const;
         ID3D12CommandQueue* operator->() const noexcept;
       private:
         ComPtr<ID3D12CommandQueue> m_commandQueue;
@@ -56,12 +55,7 @@ namespace MFramework
   }
   // MGraphics_DX12
 
-  inline ID3D12CommandQueue* CommandQueue::GetCommandQueue() const
-  {
-    return m_commandQueue.Get();
-  }
-
-  inline CommandQueue::operator ID3D12CommandQueue*() const noexcept
+  inline ID3D12CommandQueue* CommandQueue::Get(void) const
   {
     return m_commandQueue.Get();
   }

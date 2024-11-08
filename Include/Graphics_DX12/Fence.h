@@ -17,10 +17,12 @@ Encoding : UTF-8
 
 #pragma once
 
-#ifndef M_FENCE
-#define M_FENCE 1
+#ifndef M_DX12_FENCE
+#define M_DX12_FENCE
 
-#include <d3d12.h>
+struct ID3D12Device;
+struct ID3D12CommandQueue;
+struct ID3D12Fence;
 
 #include <ComPtr.h>
 
@@ -39,9 +41,9 @@ namespace MFramework
                 ~Fence();
 
             public:
-                bool Init(ID3D12Device* device);
+                bool Init(ID3D12Device*);
 
-                void Wait(ID3D12CommandQueue* commandQueue , UINT32 waitTime = INFINITE);
+                void Wait(ID3D12CommandQueue*, UINT32 = INFINITE);
 
             private:
                 void Terminate() noexcept;
@@ -50,12 +52,8 @@ namespace MFramework
                 ComPtr<ID3D12Fence> m_fence;
                 HANDLE m_event;
                 UINT64 m_fenceCount;
-            
-            private:
-                bool m_isDisposed;
-
-            private:
-                bool m_isInitialized;
+                bool m_isDisposed : 1;
+                bool m_isInitialized : 1;
         };
     }
 }

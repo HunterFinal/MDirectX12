@@ -77,6 +77,15 @@
     <ClCompile Include="Source\Graphics_DX12\CommandQueue.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\DX12SwapChain.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\RootSignature.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\IndexBufferContainer.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Debugger\Debug.h">
@@ -122,6 +131,12 @@
       <Filter>Header File\Graphics_DX12</Filter>
     </ClInclude>
     <ClInclude Include="Include\Graphics_DX12\DX12DXGIFactory.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\DX12SwapChain.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\RootSignature.h">
       <Filter>Header File\Graphics_DX12</Filter>
     </ClInclude>
   </ItemGroup>

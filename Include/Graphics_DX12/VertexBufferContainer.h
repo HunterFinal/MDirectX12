@@ -3,65 +3,61 @@
 MRenderFramework
 Author : MAI ZHICONG
 
-Description : RenderFramework used by Game (Graphics API: DirectX12)
+Description : VertexBuffer Container (Graphics API: DirectX12)
 
 Update History: 2024/09/19 Create
-                2024/09/26 Update constructor
-                           Create virtual WndProc
 
 Version : alpha_1.0.0
 
 Encoding : UTF-8 
 
 */
+#pragma once
 
 #ifndef M_VERTBUFFER_CONTAINER
-#define M_VERTBUFFER_CONTAINER 1
+#define M_VERTBUFFER_CONTAINER
 
 #include <d3d12.h>
-#include <DirectXMath.h>
 
-#include <vector>
-
-// Useful Utilities
 #include <ComPtr.h>
 #include <Interfaces/IDisposable.h>
+#include <Class-Def-Macro.h>
+
 
 namespace MFramework
 {
-    inline namespace MGraphics_DX12
+  inline namespace MGraphics_DX12
+  {
+    class VertexBufferContainer final : public IDisposable
     {
-        class VertexBufferContainer : public MFramework::IDisposable
-        {
-            using Ref = VertexBufferContainer&;
-            using Const_Ref = const Ref;
+      GENERATE_CLASS_NO_COPY(VertexBufferContainer)
 
-            public:
-                VertexBufferContainer();
-                ~VertexBufferContainer();
+      public:
+        bool Create(ID3D12Device*, size_t size, size_t stride, const void* srcData);
+        template<typename T>
+        bool Create(ID3D12Device*, size_t size, const T* srcData);
 
-            private:
-                VertexBufferContainer(Const_Ref other) = delete;
-                Ref operator=(Const_Ref other) = delete;
+      public:
+        void Dispose(void) noexcept override;
+      
+      public:
+        D3D12_VERTEX_BUFFER_VIEW GetView() const;
 
-            public:
-                bool CreateVertexBuffer(ID3D12Device* device, DirectX::XMFLOAT3* verts, UINT32 vertCnt, UINT32* indices, UINT32 indexCnt);
+      private:
+        ComPtr<ID3D12Resource> m_vertBuffer;
+        D3D12_VERTEX_BUFFER_VIEW m_vertBufferView;
+    };
 
-            public:
-                void Dispose(void) noexcept override;
-
-            private:
-                std::vector<DirectX::XMFLOAT3> m_vertices;
-                ComPtr<ID3D12Resource> m_vertexBuffer;
-                D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-
-                std::vector<UINT32> m_indices;
-                ComPtr<ID3D12Resource> m_indexBuffer;
-                D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
-
-                bool m_isCreated;
-        };
-
+    template<typename T>
+    inline bool VertexBufferContainer::Create(ID3D12Device* device, size_t size, const T* srcData)
+    {
+      return Create(device, size, sizeof(T), srcData);
     }
+
+    inline D3D12_VERTEX_BUFFER_VIEW VertexBufferContainer::GetView() const
+    {
+      return m_vertBufferView;
+    }
+  }
 }
 #endif

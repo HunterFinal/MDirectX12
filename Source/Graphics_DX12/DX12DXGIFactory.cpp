@@ -14,9 +14,7 @@ Encoding : UTF-8
 */
 #include <Graphics_DX12/DX12DXGIFactory.h>
 
-#include <d3d12.h>
 #include <dxgi1_6.h>
-#pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 
 #include <cassert>
@@ -34,16 +32,11 @@ namespace MFramework
 
   void DX12DXGIFactory::Init()
   {
-    if (m_dxgiFactory.Get() != nullptr)
-    {
-      return;
-    }
-
     HRESULT result = S_OK;
 #ifdef _DEBUG                           
-    result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(m_dxgiFactory.GetAddressOf()));
+    result = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(m_dxgiFactory.ReleaseAndGetAddressOf()));
 #else
-    result = CreateDXGIFactory1(IID_PPV_ARGS(_dxgiFactory.GetAddressOf()));
+    result = CreateDXGIFactory1(IID_PPV_ARGS(m_dxgiFactory.ReleaseAndGetAddressOf()));
 #endif 
 
     assert(SUCCEEDED(result));
