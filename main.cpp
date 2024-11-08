@@ -427,7 +427,31 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     
     // 定数バッファー作成
 
-    DirectX::XMMATRIX matrix = DirectX::XMMatrixIdentity();
+    DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixRotationY(DirectX::XM_PIDIV4);
+
+    // ウインドウ左上が(-1,1),右下が(1,-1)のため
+    // 座標変換行列は
+    // |2/window.width,               0, 0, -1|
+    // |             0,-2/window.height, 0,  1|
+    // |             0,               0, 1,  0|
+    // |             0,               0, 0,  1|
+
+    // matrix.r[0].m128_f32[0] = 2.0f / test.GetWidth();
+    // matrix.r[1].m128_f32[1] = -2.0f / test.GetHeight();
+    // // 行優先のため rは行を表している
+    // matrix.r[3].m128_f32[0] = -1.0f;
+    // matrix.r[3].m128_f32[1] = 1.0f;
+    DirectX::XMFLOAT3 eye(0,0,-5), target(0,0,0), up(0,1,0);
+    DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));
+    DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
+                                                                              DirectX::XM_PIDIV2,  // 画角が90° Pi/2
+                                                                              static_cast<float>(test.GetWidth()) 
+                                                                            / static_cast<float>(test.GetHeight()), // アスペクト比
+                                                                              1.0f,                                 // 近接クリップ面
+                                                                              10.0f                                 // 遠方クリップ面  
+                                                                          );
+    // 行優先のため変換行列は world * view * projection
+    DirectX::XMMATRIX transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
     ID3D12Resource* constBuffer = nullptr;
 
@@ -444,7 +468,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;                   // バッファーに使うためBUFFERを指定
     resourceDesc.Alignment = 0;                                                 // ??
-    resourceDesc.Width = static_cast<UINT64>((sizeof(matrix) + 0xff) & ~0xff);  // 頂点情報が入るだけのサイズ
+    resourceDesc.Width = static_cast<UINT64>((sizeof(worldMatrix) + 0xff) & ~0xff);  // 頂点情報が入るだけのサイズ
     resourceDesc.Height = 1;                                                    // 幅で表現しているので１とする
     resourceDesc.DepthOrArraySize = 1;                                          // 1でよい
     resourceDesc.MipLevels = 1;                                                 // 1でよい
@@ -477,9 +501,12 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     {
       return 114514;
     }
-    memcpy_s(mapMatrix, sizeof(matrix), &matrix, sizeof(matrix));
 
-    constBuffer->Unmap(0, nullptr);
+    size_t copySize = sizeof(transformMatrix);
+    memcpy_s(mapMatrix, copySize, &transformMatrix, copySize);
+
+    // アンマップしない状態だと、中身を毎フレーム書き換えることによりシェーダーから参照されているメモリの内容を書き換えることができる
+    // constBuffer->Unmap(0, nullptr);
 
 
     // シェーダーリソースビューを作成
@@ -516,10 +543,10 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // ※時計回り
     Vertex vertices[] = 
     {
-        {{-0.4f, -0.7f, 0.f},{0.0f, 1.0f}},     // 左下
-        {{-0.4f,  0.7f, 0.f},{0.0f, 0.0f}},     // 左上
-        {{ 0.4f, -0.7f, 0.f},{1.0f, 1.0f}},     // 右下
-        {{ 0.4f,  0.7f, 0.f},{1.0f, 0.0f}},     // 右上
+        {{   -1.0f, -1.0f, 0.0f},{0.0f, 1.0f}},     // 左下
+        {{   -1.0f,  1.0f, 0.0f},{0.0f, 0.0f}},     // 左上
+        {{    1.0f, -1.0f, 0.0f},{1.0f, 1.0f}},     // 右下
+        {{    1.0f,  1.0f, 0.0f},{1.0f, 0.0f}},     // 右上
     };
 
     // 頂点バッファー作成
@@ -715,6 +742,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     _graphicsPipelineDesc.SampleDesc.Count = 1;                     // サンプリングは1ピクセルにつき1
     _graphicsPipelineDesc.SampleDesc.Quality = 0;                   // クオリティ最低
 
+    // ルートシグネチャー作成
     MFramework::RootSignature rootSig;
     const auto FILTER = D3D12_FILTER_MIN_MAG_MIP_LINEAR; // 線形補間
 
@@ -755,10 +783,18 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     MSG msg = {};
 
+    float angle = 0.0f;
+
     #pragma region Main Loop
     // メインループ
     while(true)
     {
+      angle += 0.1f;
+      worldMatrix = DirectX::XMMatrixRotationY(angle);
+      transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
+
+      memcpy_s(mapMatrix, copySize, &transformMatrix, copySize);
+
       if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
       {
         TranslateMessage(&msg);
@@ -825,15 +861,10 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
       cmdList->RSSetViewports(1, &_viewport);
       cmdList->RSSetScissorRects(1, &_scissorRect);
 
-      D3D12_GPU_DESCRIPTOR_HANDLE heapHandle = basicDescHeap->GetGPUDescriptorHandleForHeapStart();
       cmdList->SetGraphicsRootDescriptorTable(
                                                 0,           // ルートパラメーターインデックス 
-                                                heapHandle   // ヒープアドレス
+                                                basicDescHeap->GetGPUDescriptorHandleForHeapStart()   // ヒープアドレス
                                               );
-
-      heapHandle.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-      cmdList->SetGraphicsRootDescriptorTable(1,heapHandle);
 
       cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 

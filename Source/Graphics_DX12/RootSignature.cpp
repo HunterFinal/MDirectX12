@@ -16,7 +16,6 @@ Encoding : UTF-8
 #include <Graphics_DX12/RootSignature.h>
 
 #include <d3d12.h>
-#pragma comment(lib, "d3d12.lib")
 #include <string>
 
 #include <cassert>
@@ -44,47 +43,60 @@ namespace MFramework
     {
       return;
     }
-
     // テクスチャ用
-    D3D12_DESCRIPTOR_RANGE range[2] = {};
+    D3D12_DESCRIPTOR_RANGE ranges[2] = {};
 
-    range[0].NumDescriptors = 1;                                                          // テクスチャ１つ（ディスクリプタ数）
-    range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;                                 // 種別はテクスチャ
-    range[0].BaseShaderRegister = 0;                                                      // 0番スロットから
-    range[0].RegisterSpace = 0;
-    range[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;    // 連続したディスクリプタレンジが前のディスクリプタレンジの直後に来る
+    ranges[0].NumDescriptors = 1;                                                          // テクスチャ１つ（ディスクリプタ数）
+    ranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;                                 // 種別はテクスチャ
+    ranges[0].BaseShaderRegister = 0;                                                      // 0番スロットから
+    ranges[0].RegisterSpace = 0;
+    ranges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;    // 連続したディスクリプタレンジが前のディスクリプタレンジの直後に来る
 
     // 定数用レジスター 0番
-    range[1].NumDescriptors = 1;                                                          // 定数１つ（ディスクリプタ数）
-    range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;                                 // 種別は定数
-    range[1].BaseShaderRegister = 0;                                                      // 0番スロットから
-    range[1].RegisterSpace = 0;
-    range[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;    // 連続したディスクリプタレンジが前のディスクリプタレンジの直後に来る
+    ranges[1].NumDescriptors = 1;                                                          // 定数１つ（ディスクリプタ数）
+    ranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;                                 // 種別は定数
+    ranges[1].BaseShaderRegister = 0;                                                      // 0番スロットから
+    ranges[1].RegisterSpace = 0;
+    ranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;    // 連続したディスクリプタレンジが前のディスクリプタレンジの直後に来る
 
       // ルートパラメーター作成
-    D3D12_ROOT_PARAMETER rootParam[2] = {};
+    D3D12_ROOT_PARAMETER rootParam = {};
 
-    // テクスチャ用
+    // テクスチャと定数用
     // シェーダーリソースビューと定数バッファービューが連続しており、またレンジも連続しているため、
     // ルートパラメーター1つに対して[レンジが2つ]という指定を行えば、いっぺんに2つのレジスター設定ができ、切り替えコストも軽減できる
-    rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     // ディスクリプタレンジのアドレス
-    rootParam[0].DescriptorTable.pDescriptorRanges = &range[0];
+    rootParam.DescriptorTable.pDescriptorRanges = &ranges[0];
     // ディスクリプタレンジ数
-    rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam.DescriptorTable.NumDescriptorRanges = 2;
     // すべてのシェーダーから見える
-    rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-    // 定数用
-    // シェーダーリソースビューと定数バッファービューが連続しており、またレンジも連続しているため、
-    // ルートパラメーター1つに対して[レンジが2つ]という指定を行えば、いっぺんに2つのレジスター設定ができ、切り替えコストも軽減できる
-    rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    // ディスクリプタレンジのアドレス
-    rootParam[1].DescriptorTable.pDescriptorRanges = &range[1];
-    // ディスクリプタレンジ数
-    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
-    // すべてのシェーダーから見える
-    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    //   // ルートパラメーター作成
+    // D3D12_ROOT_PARAMETER rootParam[2] = {};
+
+    // // テクスチャ用
+    // // シェーダーリソースビューと定数バッファービューが連続しており、またレンジも連続しているため、
+    // // ルートパラメーター1つに対して[レンジが2つ]という指定を行えば、いっぺんに2つのレジスター設定ができ、切り替えコストも軽減できる
+    // rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    // // ディスクリプタレンジのアドレス
+    // rootParam[0].DescriptorTable.pDescriptorRanges = &ranges[0];
+    // // ディスクリプタレンジ数
+    // rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
+    // // すべてのシェーダーから見える
+    // rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    // // 定数用
+    // // シェーダーリソースビューと定数バッファービューが連続しており、またレンジも連続しているため、
+    // // ルートパラメーター1つに対して[レンジが2つ]という指定を行えば、いっぺんに2つのレジスター設定ができ、切り替えコストも軽減できる
+    // rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    // // ディスクリプタレンジのアドレス
+    // rootParam[1].DescriptorTable.pDescriptorRanges = &ranges[1];
+    // // ディスクリプタレンジ数
+    // rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
+    // // すべてのシェーダーから見える
+    // rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
     // サンプラーを作成
     D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
@@ -102,7 +114,7 @@ namespace MFramework
     samplerDesc.RegisterSpace = 0;                                              // ??
     samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;               // ピクセルシェーダーから見える        
 
-      // ルートシグネチャー作成
+    // ルートシグネチャー作成
     // ディスクリプタテーブルをまとめたもの
     // 頂点情報以外のデータをパイプラインの外からシェーダーに送りこむために使われる
     // 今回は頂点だけを流し込んで、それをそのまま表示するため、ルートシグネチャー情報は特に必要ないが
@@ -110,8 +122,8 @@ namespace MFramework
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 
     // Flagsに「頂点情報（入力アセンブラ）がある」という意味の値を設定
-    rootSignatureDesc.NumParameters = 2;            // ルートパラメーター数
-    rootSignatureDesc.pParameters = rootParam;      // ルートパラメーターの先頭アドレス
+    rootSignatureDesc.NumParameters = 1;            // ルートパラメーター数
+    rootSignatureDesc.pParameters = &rootParam;     // ルートパラメーターの先頭アドレス
     rootSignatureDesc.NumStaticSamplers = 1;        
     rootSignatureDesc.pStaticSamplers = &samplerDesc;
     rootSignatureDesc.Flags = ROOT_SIGNATURE_FLAGS;
@@ -130,13 +142,20 @@ namespace MFramework
 
     if (FAILED(result))
     {
-      std::string errMsg;
-      errMsg.resize(errorBlob->GetBufferSize());
-      std::copy_n(static_cast<char*>(errorBlob->GetBufferPointer()), errorBlob->GetBufferSize(), errMsg.begin());
+      if (errorBlob.Get() != nullptr)
+      {
+        std::string errMsg;
+        errMsg.resize(errorBlob->GetBufferSize());
+        std::copy_n(static_cast<char*>(errorBlob->GetBufferPointer()), errorBlob->GetBufferSize(), errMsg.begin());
 
-      ::OutputDebugStringA(errMsg.c_str());
-
+        ::OutputDebugStringA(errMsg.c_str());
+      }
+      else
+      {
+        // result を出力
+      }
       assert(false);
+      return;
     }
 
     // ルートシグネチャーオブジェクト作成
@@ -150,10 +169,12 @@ namespace MFramework
     if(FAILED(result))
     {
       assert(false);
+      return;
     }
 
     rootSigBlob->Release();
     rootSigBlob.Reset();
+
   }
 
   void RootSignature::Dispose(void) noexcept
