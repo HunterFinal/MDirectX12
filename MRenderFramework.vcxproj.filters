@@ -42,6 +42,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Source File\Utilities">
+      <UniqueIdentifier>{806ecd71-66f9-408c-a0fd-437af1cff4d2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -85,6 +88,18 @@
     </ClCompile>
     <ClCompile Include="Source\Graphics_DX12\IndexBufferContainer.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\ConstantBuffer.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\DescriptorHandle.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\ShaderResBlob.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Utilities\FileUtil.cpp">
+      <Filter>Source File\Utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

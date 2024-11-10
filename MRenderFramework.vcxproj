@@ -147,13 +147,17 @@
     <ClCompile Include="Source\Debugger\DefaultLogger.cpp" />
     <ClCompile Include="Source\Graphics_DX12\CommandList.cpp" />
     <ClCompile Include="Source\Graphics_DX12\CommandQueue.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\ConstantBuffer.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\DescriptorHandle.cpp" />
     <ClCompile Include="Source\Graphics_DX12\DX12Device.cpp" />
     <ClCompile Include="Source\Graphics_DX12\DX12DXGIFactory.cpp" />
     <ClCompile Include="Source\Graphics_DX12\DX12SwapChain.cpp" />
     <ClCompile Include="Source\Graphics_DX12\Fence.cpp" />
     <ClCompile Include="Source\Graphics_DX12\IndexBufferContainer.cpp" />
     <ClCompile Include="Source\Graphics_DX12\RootSignature.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\ShaderResBlob.cpp" />
     <ClCompile Include="Source\Graphics_DX12\VertexBufferContainer.cpp" />
+    <ClCompile Include="Source\Utilities\FileUtil.cpp" />
     <ClCompile Include="Source\Window\BaseWindow.cpp" />
   </ItemGroup>
   <ItemGroup>

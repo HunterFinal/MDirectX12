@@ -11,6 +11,10 @@ Version : alpha_1.0.0
 
 */
 
+// DirectX 12、シェーダー モデル 5.1、D3DCompile API、FXC はすべて非推奨です。 
+// 代わりに、DXIL 経由でシェーダー モデル 6 を使用してください。 GitHub を参照してください。
+// url https://github.com/microsoft/DirectXShaderCompiler
+
 // Debug include
 #ifdef _DEBUG
 
@@ -65,6 +69,11 @@ Version : alpha_1.0.0
 
 #include <Graphics_DX12/VertexBufferContainer.h>
 #include <Graphics_DX12/IndexBufferContainer.h>
+
+#include <Graphics_DX12/DescriptorHandle.h>
+#include <Graphics_DX12/ConstantBuffer.h>
+
+#include <Graphics_DX12/ShaderResBlob.h>
 
 #pragma endregion
 // end region of DX12 Wrapper
@@ -424,9 +433,29 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
         return -1;
     }
 
-    
-    // 定数バッファー作成
+    // シェーダーリソースビューを作成
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
+    srvDesc.Format = metadata.format;                                           // RGBA(0.0f~1.0fに正規化)
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;                      // 2Dテクスチャ
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING; // データのRGBAをどのようにマッピングするかということを指定するためのもの
+                                                                                // 画像の情報がそのままRGBAなど「指定されたフォーマットに、
+                                                                                // データどおりの順序で割り当てられている」ことを表しています。
+    srvDesc.Texture2D.MipLevels = 1;                                            // ミップマップは使用しないので１
+
+    // 三つ目の引数はディスクリプタヒープのどこにこのビューを配置するかを指定するためのもの
+    // 複数のテクスチャビューがある場合、取得したハンドルからオフセットを指定する必要がある
+    
+    D3D12_CPU_DESCRIPTOR_HANDLE basicHeapHandle = basicDescHeap->GetCPUDescriptorHandleForHeapStart();
+    device->CreateShaderResourceView(
+                                        texBuffer,                                          // ビューと関連付けるバッファー
+                                        &srvDesc,                                           // 先ほど設定したテクスチャ設定情報
+                                        basicHeapHandle                                     // ヒープのどこに割り当てるか
+                                    );
+    // 次の場所に移動
+    basicHeapHandle.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    // 定数バッファー作成
     DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixRotationY(DirectX::XM_PIDIV4);
 
     // ウインドウ左上が(-1,1),右下が(1,-1)のため
@@ -453,91 +482,10 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // 行優先のため変換行列は world * view * projection
     DirectX::XMMATRIX transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-    ID3D12Resource* constBuffer = nullptr;
-
-    D3D12_HEAP_PROPERTIES heapProp = {};
-
-    heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;                       // CPUからアクセスできる（Mapできる）※DEFAULTより遅い
-    heapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;   // TypeはCUSTOMじゃないためUNKNOWNでよい
-    heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;    // TypeはCUSTOMじゃないためUNKNOWNでよい
-    heapProp.CreationNodeMask = 1;  // 0 と同じ意味
-    heapProp.VisibleNodeMask = 1;
-
-    // 定数バッファー情報
-    D3D12_RESOURCE_DESC resourceDesc = {};
-
-    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;                   // バッファーに使うためBUFFERを指定
-    resourceDesc.Alignment = 0;                                                 // ??
-    resourceDesc.Width = static_cast<UINT64>((sizeof(worldMatrix) + 0xff) & ~0xff);  // 頂点情報が入るだけのサイズ
-    resourceDesc.Height = 1;                                                    // 幅で表現しているので１とする
-    resourceDesc.DepthOrArraySize = 1;                                          // 1でよい
-    resourceDesc.MipLevels = 1;                                                 // 1でよい
-    resourceDesc.Format = DXGI_FORMAT_UNKNOWN;                                  // 今回は画像ではないためUNKNOWNでよい
-    resourceDesc.SampleDesc.Count = 1;                                          // アンチエイリアシングを行うときのパラメーター。※ 0だとデータがないことになってしまうため、1にする
-    resourceDesc.SampleDesc.Quality = 0;                                        // ??
-    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;                       // UNKNOWNと指定すると、自動で最適なレイアウトに設定しようとする　※今回はテクスチャではないため不適切です
-    resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;                              // NONEでよい※要調べ
-
-    result = device->CreateCommittedResource(
-                                                &heapProp,
-                                                D3D12_HEAP_FLAG_NONE,
-                                                &resourceDesc,
-                                                D3D12_RESOURCE_STATE_GENERIC_READ,
-                                                nullptr,
-                                                IID_PPV_ARGS(&constBuffer)
-                                            );
-
-    if (FAILED(result))
-    {
-      return 114514;
-    }
-
-    // マップする
-    DirectX::XMMATRIX* mapMatrix = nullptr;
-
-    result = constBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapMatrix));
-
-    if (FAILED(result))
-    {
-      return 114514;
-    }
-
-    size_t copySize = sizeof(transformMatrix);
-    memcpy_s(mapMatrix, copySize, &transformMatrix, copySize);
-
-    // アンマップしない状態だと、中身を毎フレーム書き換えることによりシェーダーから参照されているメモリの内容を書き換えることができる
-    // constBuffer->Unmap(0, nullptr);
-
-
-    // シェーダーリソースビューを作成
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-    srvDesc.Format = metadata.format;                                           // RGBA(0.0f~1.0fに正規化)
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;                      // 2Dテクスチャ
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING; // データのRGBAをどのようにマッピングするかということを指定するためのもの
-                                                                                // 画像の情報がそのままRGBAなど「指定されたフォーマットに、
-                                                                                // データどおりの順序で割り当てられている」ことを表しています。
-    srvDesc.Texture2D.MipLevels = 1;                                            // ミップマップは使用しないので１
-
-    // 三つ目の引数はディスクリプタヒープのどこにこのビューを配置するかを指定するためのもの
-    // 複数のテクスチャビューがある場合、取得したハンドルからオフセットを指定する必要がある
-    
-    D3D12_CPU_DESCRIPTOR_HANDLE basicHeapHandle = basicDescHeap->GetCPUDescriptorHandleForHeapStart();
-    device->CreateShaderResourceView(
-                                        texBuffer,                                          // ビューと関連付けるバッファー
-                                        &srvDesc,                                           // 先ほど設定したテクスチャ設定情報
-                                        basicHeapHandle                                     // ヒープのどこに割り当てるか
-                                    );
-    
-    // 次の場所に移動
-    basicHeapHandle.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-    cbvDesc.BufferLocation = constBuffer->GetGPUVirtualAddress();
-    cbvDesc.SizeInBytes = static_cast<UINT>(constBuffer->GetDesc().Width);
-
-    // 定数バッファービュー作成
-    device->CreateConstantBufferView(&cbvDesc, basicHeapHandle);
+    MFramework::ConstantBuffer constBuffer;
+    MFramework::DescriptorHandle constHandle;
+    constHandle.CPUHandle = basicHeapHandle;
+    constBuffer.Create(device.Get(), constHandle, 1, &transformMatrix);
 
     // 頂点座標
     // ※時計回り
@@ -569,79 +517,20 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     D3D12_VERTEX_BUFFER_VIEW vertView = vertBuffer.GetView();
     cmdList->IASetVertexBuffers(0, 1, &vertView);
 
+    const std::wstring VERTEX_SHADER = L"Shaders/HLSLs/BasicVertexShader.hlsl";
+    const std::wstring PIXEL_SHADER = L"Shaders/HLSLs/BasicPixelShader.hlsl";
     // Shaderオブジェクトを作成
-    // ID3DBlobは　Binary Large Objectの略称、「何かのデータの塊」として使われている「汎用型」のオブジェクトです
-    ID3DBlob* _vertexShaderBlob = nullptr;
-    ID3DBlob* _pixelShaderBlob = nullptr;
+    MFramework::ShaderResBlob vertShader;
+    MFramework::ShaderResBlob pixelShader;
+    // 頂点シェーダー作成
+    //vertShader.InitFromFile(VERTEX_SHADER.c_str(), "BasicVS", "vs_5_1");
+    vertShader.InitFromCSO(L"BasicVertexShader.cso");
+    // ピクセルシェーダー作成
+    //pixelShader.InitFromFile(PIXEL_SHADER.c_str(), "BasicPS", "ps_5_1");
+    pixelShader.InitFromCSO(L"BasicPixelShader.cso");
 
     // エラーメッセージが入っているBlob
     ID3DBlob* _errorBlob = nullptr;
-
-    const std::wstring VERTEX_SHADER = L"Shaders/HLSLs/BasicVertexShader.hlsl";
-    const std::wstring PIXEL_SHADER = L"Shaders/HLSLs/BasicPixelShader.hlsl";
-    const UINT SHADER_COMPILE_OPTION = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;  // デバッグ用および最適化なし
-
-    // 頂点シェーダー作成
-    result = D3DCompileFromFile(
-                                    VERTEX_SHADER.c_str(),              // シェーダーファイル名
-                                    nullptr,                            // #defineを配列で指定するための引数
-                                    D3D_COMPILE_STANDARD_FILE_INCLUDE,  // shaderの中#includeが書かれているとき、インクルードファイルのディレクトリとしてカレントディレクトリを参照（#includeを使わないときはnullptrでよい）
-                                    "BasicVS",                          // エントリーポイント
-                                    "vs_5_1",                           // シェーダーモデルバージョン
-                                    SHADER_COMPILE_OPTION,              // シェーダーコンパイルオプション
-                                    0,                                  // エフェクトコンパイルオプション（シェーダーファイルの場合０が推奨）
-                                    &_vertexShaderBlob,                 // 受け取るためのポインターのアドレス
-                                    &_errorBlob                         // エラー用ポインターのアドレス
-    );
-
-    if (FAILED(result))
-    {
-        if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-        {
-            ::OutputDebugStringW(L"*****ERROR***** ファイルが見当たりません。\n");
-        }
-        else
-        {
-            std::string errMsg;
-            errMsg.resize(_errorBlob->GetBufferSize());
-            std::copy_n(static_cast<char*>(_errorBlob->GetBufferPointer()), _errorBlob->GetBufferSize(), errMsg.begin());
-
-            ::OutputDebugStringA(errMsg.c_str());
-        }
-
-        return -1;
-    }
-
-    // ピクセルシェーダー作成
-    result = D3DCompileFromFile(
-                                    PIXEL_SHADER.c_str(),               // シェーダーファイル名
-                                    nullptr,                            // #defineを配列で指定するための引数
-                                    D3D_COMPILE_STANDARD_FILE_INCLUDE,  // shaderの中#includeが書かれているとき、インクルードファイルのディレクトリとしてカレントディレクトリを参照（#includeを使わないときはnullptrでよい）
-                                    "BasicPS",                          // エントリーポイント
-                                    "ps_5_1",                           // シェーダーモデルバージョン
-                                    SHADER_COMPILE_OPTION,              // シェーダーコンパイルオプション
-                                    0,                                  // エフェクトコンパイルオプション（シェーダーファイルの場合０が推奨）
-                                    &_pixelShaderBlob,                  // 受け取るためのポインターのアドレス
-                                    &_errorBlob                         // エラー用ポインターのアドレス
-                               );
-
-    if (FAILED(result))
-    {
-        if (result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-        {
-            ::OutputDebugStringW(L"*****ERROR***** ファイルが見当たりません。\n");
-        }
-        else
-        {
-            std::string errMsg;
-            errMsg.resize(_errorBlob->GetBufferSize());
-            std::copy_n(static_cast<char*>(_errorBlob->GetBufferPointer()), _errorBlob->GetBufferSize(), errMsg.begin());
-
-            ::OutputDebugStringA(errMsg.c_str());
-        }
-
-        return -1;
-    }
 
     // 頂点レイアウト作成
     // 渡される頂点データなどをどのように解釈するかをGPUに教えてあげるため
@@ -674,10 +563,10 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     _graphicsPipelineDesc.pRootSignature = nullptr;
     // シェーダーをセット
-    _graphicsPipelineDesc.VS.pShaderBytecode = _vertexShaderBlob->GetBufferPointer();
-    _graphicsPipelineDesc.VS.BytecodeLength = _vertexShaderBlob->GetBufferSize();
-    _graphicsPipelineDesc.PS.pShaderBytecode = _pixelShaderBlob->GetBufferPointer();
-    _graphicsPipelineDesc.PS.BytecodeLength = _pixelShaderBlob->GetBufferSize();
+    _graphicsPipelineDesc.VS.pShaderBytecode = vertShader.Get()->GetBufferPointer();
+    _graphicsPipelineDesc.VS.BytecodeLength = vertShader.Get()->GetBufferSize();
+    _graphicsPipelineDesc.PS.pShaderBytecode = pixelShader.Get()->GetBufferPointer();
+    _graphicsPipelineDesc.PS.BytecodeLength = pixelShader.Get()->GetBufferSize();
 
     // サンプルマスクとラスタライザーステート設定
     _graphicsPipelineDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
@@ -763,8 +652,8 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // ビューポートを作成
     D3D12_VIEWPORT _viewport = {};
 
-    _viewport.Width = 1920;
-    _viewport.Height = 1080;
+    _viewport.Width = static_cast<float>(test.GetWidth());
+    _viewport.Height = static_cast<float>(test.GetHeight());
     _viewport.TopLeftX = 0;
     _viewport.TopLeftY = 0;
     _viewport.MaxDepth = 1.0f;
@@ -776,8 +665,8 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     _scissorRect.top = 0;
     _scissorRect.left = 0;
-    _scissorRect.right = _scissorRect.left + 1920;
-    _scissorRect.bottom = _scissorRect.top + 1080;
+    _scissorRect.right = _scissorRect.left + static_cast<LONG>(test.GetWidth());
+    _scissorRect.bottom = _scissorRect.top + static_cast<LONG>(test.GetHeight());
 
     UINT frame = 0;
 
@@ -793,7 +682,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
       worldMatrix = DirectX::XMMatrixRotationY(angle);
       transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-      memcpy_s(mapMatrix, copySize, &transformMatrix, copySize);
+      constBuffer.Remap(1, &transformMatrix);
 
       if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
       {
@@ -924,15 +813,18 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     // Dispose resources
     {
-        test.Dispose();
-        device.Dispose();
-        dxgiFactory.Dispose();
-        cmdList.Dispose();
-        cmdQueue.Dispose();
-        swapChain.Dispose();
-        rootSig.Dispose();
-        vertBuffer.Dispose();
-        idxBuffer.Dispose();
+      test.Dispose();
+      device.Dispose();
+      dxgiFactory.Dispose();
+      cmdList.Dispose();
+      cmdQueue.Dispose();
+      swapChain.Dispose();
+      rootSig.Dispose();
+      vertBuffer.Dispose();
+      idxBuffer.Dispose();
+      constBuffer.Dispose();
+      vertShader.Dispose();
+      pixelShader.Dispose();
     }
 
     return 0;
