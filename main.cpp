@@ -529,9 +529,6 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     //pixelShader.InitFromFile(PIXEL_SHADER.c_str(), "BasicPS", "ps_5_1");
     pixelShader.InitFromCSO(L"BasicPixelShader.cso");
 
-    // エラーメッセージが入っているBlob
-    ID3DBlob* _errorBlob = nullptr;
-
     // 頂点レイアウト作成
     // 渡される頂点データなどをどのように解釈するかをGPUに教えてあげるため
     D3D12_INPUT_ELEMENT_DESC _inputLayout[] = 
@@ -632,8 +629,8 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     _graphicsPipelineDesc.SampleDesc.Quality = 0;                   // クオリティ最低
 
     // ルートシグネチャー作成
-    MFramework::RootSignature rootSig;
     const auto FILTER = D3D12_FILTER_MIN_MAG_MIP_LINEAR; // 線形補間
+    MFramework::RootSignature rootSig;
 
     rootSig.Init(device.Get(), FILTER);
 
