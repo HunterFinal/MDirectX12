@@ -166,11 +166,15 @@
     <ClInclude Include="Include\Debugger\ILogger.h" />
     <ClInclude Include="Include\Graphics_DX12\CommandList.h" />
     <ClInclude Include="Include\Graphics_DX12\CommandQueue.h" />
+    <ClInclude Include="Include\Graphics_DX12\ConstantBuffer.h" />
+    <ClInclude Include="Include\Graphics_DX12\DescriptorHandle.h" />
     <ClInclude Include="Include\Graphics_DX12\DX12Device.h" />
     <ClInclude Include="Include\Graphics_DX12\DX12DXGIFactory.h" />
     <ClInclude Include="Include\Graphics_DX12\DX12SwapChain.h" />
     <ClInclude Include="Include\Graphics_DX12\Fence.h" />
+    <ClInclude Include="Include\Graphics_DX12\IndexBufferContainer.h" />
     <ClInclude Include="Include\Graphics_DX12\RootSignature.h" />
+    <ClInclude Include="Include\Graphics_DX12\ShaderResBlob.h" />
     <ClInclude Include="Include\Graphics_DX12\VertexBufferContainer.h" />
     <ClInclude Include="Include\Utilities\Base-Def-Macro.h" />
     <ClInclude Include="Include\Utilities\Class-Def-Macro.h" />
