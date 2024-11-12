@@ -17,8 +17,6 @@ Encoding : UTF-8
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#pragma comment(lib,"d3d12.lib")
-#pragma comment(lib,"dxgi.lib")
 
 #include <Interfaces/IWindowInfo.h>
 #include <cassert>
@@ -52,7 +50,7 @@ namespace MFramework
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER;
-    swapChainDesc.BufferCount = frameCount;
+    swapChainDesc.BufferCount = static_cast<UINT>(frameCount);
     // バックバッファーは伸び縮み可能
     swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
     // フリップ後は速やかに破棄

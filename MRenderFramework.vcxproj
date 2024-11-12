@@ -149,11 +149,13 @@
     <ClCompile Include="Source\Graphics_DX12\CommandQueue.cpp" />
     <ClCompile Include="Source\Graphics_DX12\ConstantBuffer.cpp" />
     <ClCompile Include="Source\Graphics_DX12\DescriptorHandle.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\DescriptorHeap.cpp" />
     <ClCompile Include="Source\Graphics_DX12\DX12Device.cpp" />
     <ClCompile Include="Source\Graphics_DX12\DX12DXGIFactory.cpp" />
     <ClCompile Include="Source\Graphics_DX12\DX12SwapChain.cpp" />
     <ClCompile Include="Source\Graphics_DX12\Fence.cpp" />
     <ClCompile Include="Source\Graphics_DX12\IndexBufferContainer.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\RenderTarget.cpp" />
     <ClCompile Include="Source\Graphics_DX12\RootSignature.cpp" />
     <ClCompile Include="Source\Graphics_DX12\ShaderResBlob.cpp" />
     <ClCompile Include="Source\Graphics_DX12\VertexBufferContainer.cpp" />
@@ -168,11 +170,13 @@
     <ClInclude Include="Include\Graphics_DX12\CommandQueue.h" />
     <ClInclude Include="Include\Graphics_DX12\ConstantBuffer.h" />
     <ClInclude Include="Include\Graphics_DX12\DescriptorHandle.h" />
+    <ClInclude Include="Include\Graphics_DX12\DescriptorHeap.h" />
     <ClInclude Include="Include\Graphics_DX12\DX12Device.h" />
     <ClInclude Include="Include\Graphics_DX12\DX12DXGIFactory.h" />
     <ClInclude Include="Include\Graphics_DX12\DX12SwapChain.h" />
     <ClInclude Include="Include\Graphics_DX12\Fence.h" />
     <ClInclude Include="Include\Graphics_DX12\IndexBufferContainer.h" />
+    <ClInclude Include="Include\Graphics_DX12\RenderTarget.h" />
     <ClInclude Include="Include\Graphics_DX12\RootSignature.h" />
     <ClInclude Include="Include\Graphics_DX12\ShaderResBlob.h" />
     <ClInclude Include="Include\Graphics_DX12\VertexBufferContainer.h" />

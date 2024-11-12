@@ -71,7 +71,10 @@ Version : alpha_1.0.0
 #include <Graphics_DX12/IndexBufferContainer.h>
 
 #include <Graphics_DX12/DescriptorHandle.h>
+#include <Graphics_DX12/DescriptorHeap.h>
 #include <Graphics_DX12/ConstantBuffer.h>
+
+#include <Graphics_DX12/RenderTarget.h>
 
 #include <Graphics_DX12/ShaderResBlob.h>
 
@@ -169,57 +172,24 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // end region of D3D12 SwapChain for Double buffering
 
     #pragma region D3D12 Descriptor Heap for multiple Descriptors
-    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 
-    heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;     // レンダーターゲットビューなのでRTV
-    heapDesc.NodeMask = 0;                              // GPUを一つだけ使用する想定なので0を入れる(複数のGPUがある場合に識別を行うためのビットフラグ)
-    heapDesc.NumDescriptors = FRAME_COUNT;              // 裏表2つ
-    // TODO
-    // テクスチャバッファー（SRV）や定数バッファー（CBV）であれば D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
-    heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;   // 特に指定なし
+    MFramework::DescriptorHeap rtvHeap;
+    rtvHeap.Init(device.Get(), D3D12DescHeapType::RTV, FRAME_COUNT);
 
-    ID3D12DescriptorHeap* rtvHeaps = nullptr;
-
-    result = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&rtvHeaps));
-
-    // 生成失敗
-    if(result != S_OK)
-    {
-        return -1;
-    }
     #pragma endregion
     // end region of D3D12 Descriptor Heap for multiple Descriptors
 
     #pragma region D3D12 SwapChain and Descriptor binding
     // Swap ChainのメソッドGetDescでDXGI_SWAP_CHAIN_DESC取得
-    DXGI_SWAP_CHAIN_DESC swcDesc = {};
 
-    result = swapChain->GetDesc(&swcDesc);
+    // レンダーターゲットを生成
+    std::vector<MFramework::RenderTarget> renderTargets;
+    renderTargets.resize(FRAME_COUNT);
 
-    // 取得失敗
-    if(result != S_OK)
+    for (size_t i = 0; i < FRAME_COUNT; ++i)
     {
-        return -1;
-    }
-    
-    std::vector<ID3D12Resource*> _backBuffers(swcDesc.BufferCount);
-
-    // SRGBレンダーターゲットビュー設定
-    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-
-    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // ガンマ補正あり (sRGB)
-    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-
-    // Get DescriptorHeap handle
-    D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
-
-    for(size_t i = 0; i < swcDesc.BufferCount; ++i)
-    {
-        result = swapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&_backBuffers[i]));
-        device->CreateRenderTargetView(_backBuffers[i], &rtvDesc, handle);
-
-        // ハンドルサイズを計算し、先頭からずらす
-        handle.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+      auto handle = rtvHeap.GetHandle(i);
+      renderTargets[i].Create(device.Get(), swapChain.Get(), i, &handle);
     }
     #pragma endregion
     // end region of D3D12 SwapChain and Descriptor binding
@@ -229,12 +199,6 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     MFramework::Fence fence;
     fence.Init(device.Get());
 
-    // D3D12に使う定数
-    // RTVのインクリメントサイズ
-    const UINT RTV_INCREMENT_SIZE = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-
-    
     // テクスチャ
     // WICテクスチャのロード
     DirectX::TexMetadata metadata = {};
@@ -410,29 +374,9 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
      }
 
     // テクスチャディスクリプタヒープ作成
-    ID3D12DescriptorHeap* basicDescHeap = nullptr;
-    D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
-
-    // シェーダーから見えるように
-    descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-    // マスクは0
-    descHeapDesc.NodeMask = 0;
-
-    // SRV1つとCBV1つ
-    descHeapDesc.NumDescriptors = 2;
-
-    // シェーダーリソースビュー用
-    descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-
-    // 生成
-    result = device->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&basicDescHeap));
-
-    if (FAILED(result))
-    {
-        return -1;
-    }
-
+    MFramework::DescriptorHeap texHeap;
+    texHeap.Init(device.Get(), D3D12DescHeapType::CBV_SRV_UAV, 2);
+   
     // シェーダーリソースビューを作成
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
@@ -446,14 +390,16 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // 三つ目の引数はディスクリプタヒープのどこにこのビューを配置するかを指定するためのもの
     // 複数のテクスチャビューがある場合、取得したハンドルからオフセットを指定する必要がある
     
-    D3D12_CPU_DESCRIPTOR_HANDLE basicHeapHandle = basicDescHeap->GetCPUDescriptorHandleForHeapStart();
-    device->CreateShaderResourceView(
-                                        texBuffer,                                          // ビューと関連付けるバッファー
-                                        &srvDesc,                                           // 先ほど設定したテクスチャ設定情報
-                                        basicHeapHandle                                     // ヒープのどこに割り当てるか
-                                    );
-    // 次の場所に移動
-    basicHeapHandle.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    MFramework::DescriptorHandle texHeapHandle = texHeap.GetHandle(0);
+
+    if (texHeapHandle.HasCPUHandle())
+    {
+      device->CreateShaderResourceView(
+                                    texBuffer,                                          // ビューと関連付けるバッファー
+                                    &srvDesc,                                           // 先ほど設定したテクスチャ設定情報
+                                    texHeapHandle.CPUHandle                           // ヒープのどこに割り当てるか
+                                );
+    }
 
     // 定数バッファー作成
     DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixRotationY(DirectX::XM_PIDIV4);
@@ -483,8 +429,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     DirectX::XMMATRIX transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
     MFramework::ConstantBuffer constBuffer;
-    MFramework::DescriptorHandle constHandle;
-    constHandle.CPUHandle = basicHeapHandle;
+    MFramework::DescriptorHandle constHandle = texHeap.GetHandle(1);
     constBuffer.Create(device.Get(), constHandle, 1, &transformMatrix);
 
     // 頂点座標
@@ -671,6 +616,8 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     float angle = 0.0f;
 
+    auto texHeapPtr = texHeap.Get();
+
     #pragma region Main Loop
     // メインループ
     while(true)
@@ -698,12 +645,12 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
       // リソースバリアを設定
       D3D12_RESOURCE_BARRIER barrierDesc = {};
 
-      barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;                      // 遷移
-      barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;                           // 特に指定なし
-      barrierDesc.Transition.pResource = _backBuffers[backBufferIndex];               // バックバッファーリソース
-      barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;   // サブリソース番号
-      barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;              // 直前はPRESENT状態
-      barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;         // 今からレンダーターゲット状態
+      barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;                                // 遷移
+      barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;                                     // 特に指定なし
+      barrierDesc.Transition.pResource = renderTargets[backBufferIndex].Get();                  // バックバッファーリソース
+      barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;             // サブリソース番号
+      barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;                        // 直前はPRESENT状態
+      barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;                   // 今からレンダーターゲット状態
 
       // バリア指定実行
       // 第一引数:設定バリアの数(現時点では1でよい)
@@ -719,38 +666,42 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
       // IDXGISwapchain::Present()メソッドを実行
 
       // レンダーターゲットを指定
-      auto rtvHeap = rtvHeaps->GetCPUDescriptorHandleForHeapStart();
-      rtvHeap.ptr += static_cast<ULONG_PTR>(backBufferIndex * RTV_INCREMENT_SIZE);
+      auto rtvHandle = rtvHeap.GetHandle(backBufferIndex);
 
       // レンダーターゲットビューをセット 
       // 第一引数:レンダーターゲット数(今回は一つだけで1でよい)
       // 第二引数:レンダーターゲットハンドル先頭アドレス
       // TODO 第三引数:複数時に連続しているか
       // 第四引数:深度ステンシルバッファービューのハンドル(nullptrでよい)
-      cmdList->OMSetRenderTargets(1, &rtvHeap, false, nullptr);
-
-      // 画面クリア
-      float r = 0.0f;
-      float g = 0.0f;
-      float b = 0.0f;
-      r = static_cast<float>((0xff & frame >> 16) / 255.0f);
-      g = static_cast<float>((0xff & frame >> 8) / 255.0f);
-      b = static_cast<float>((0xff & frame >> 0) / 255.0f);
-      float clearColor[] = {r, g, b, 1.f};
-      cmdList->ClearRenderTargetView(rtvHeap, clearColor, 0, nullptr);
-
+      if (rtvHandle.HasCPUHandle())
+      {
+        cmdList->OMSetRenderTargets(1, &rtvHandle.CPUHandle, false, nullptr);
+        // 画面クリア
+        float r = 0.0f;
+        float g = 0.0f;
+        float b = 0.0f;
+        r = static_cast<float>((0xff & frame >> 16) / 255.0f);
+        g = static_cast<float>((0xff & frame >> 8) / 255.0f);
+        b = static_cast<float>((0xff & frame >> 0) / 255.0f);
+        float clearColor[] = {r, g, b, 1.f};
+        cmdList->ClearRenderTargetView(rtvHandle.CPUHandle, clearColor, 0, nullptr);
+      }
       ++frame;
 
       // ルートシグネチャー設定
+
       cmdList->SetGraphicsRootSignature(rootSig.Get());
-      cmdList->SetDescriptorHeaps(1, &basicDescHeap);
+      cmdList->SetDescriptorHeaps(1, &texHeapPtr);
       cmdList->RSSetViewports(1, &_viewport);
       cmdList->RSSetScissorRects(1, &_scissorRect);
 
-      cmdList->SetGraphicsRootDescriptorTable(
-                                                0,           // ルートパラメーターインデックス 
-                                                basicDescHeap->GetGPUDescriptorHandleForHeapStart()   // ヒープアドレス
-                                              );
+      if (texHeapHandle.HasGPUHandle())
+      {
+        cmdList->SetGraphicsRootDescriptorTable(
+                                                  0,           // ルートパラメーターインデックス 
+                                                  texHeapHandle.GPUHandle   // ヒープアドレス
+                                                );
+      }
 
       cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -822,6 +773,8 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
       constBuffer.Dispose();
       vertShader.Dispose();
       pixelShader.Dispose();
+      rtvHeap.Dispose();
+      texHeap.Dispose();
     }
 
     return 0;

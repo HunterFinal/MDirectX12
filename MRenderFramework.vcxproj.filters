@@ -101,6 +101,12 @@
     <ClCompile Include="Source\Utilities\FileUtil.cpp">
       <Filter>Source File\Utilities</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\DescriptorHeap.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\RenderTarget.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Debugger\Debug.h">
@@ -152,6 +158,24 @@
       <Filter>Header File\Graphics_DX12</Filter>
     </ClInclude>
     <ClInclude Include="Include\Graphics_DX12\RootSignature.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\DescriptorHeap.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\ConstantBuffer.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\DescriptorHandle.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\IndexBufferContainer.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\ShaderResBlob.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\RenderTarget.h">
       <Filter>Header File\Graphics_DX12</Filter>
     </ClInclude>
   </ItemGroup>
