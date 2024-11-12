@@ -43,6 +43,9 @@ namespace MWindow
         protected:
             virtual LRESULT CALLBACK WindowProcedure(UINT msg, WPARAM wparam, LPARAM lparam);
 
+        public:
+            virtual bool PollWNDMessage(MSG&);
+
         private:
             HWND m_handleWindow;
             HINSTANCE m_hInstance;

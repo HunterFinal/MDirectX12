@@ -107,6 +107,9 @@
     <ClCompile Include="Source\Graphics_DX12\RenderTarget.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\PipelineState.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Debugger\Debug.h">
@@ -176,6 +179,9 @@
       <Filter>Header File\Graphics_DX12</Filter>
     </ClInclude>
     <ClInclude Include="Include\Graphics_DX12\RenderTarget.h">
+      <Filter>Header File\Graphics_DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Graphics_DX12\PipelineState.h">
       <Filter>Header File\Graphics_DX12</Filter>
     </ClInclude>
   </ItemGroup>

@@ -64,6 +64,7 @@ Version : alpha_1.0.0
 #include <Graphics_DX12/CommandList.h>
 #include <Graphics_DX12/CommandQueue.h>
 #include <Graphics_DX12/RootSignature.h>
+#include <Graphics_DX12/PipelineState.h>
 #include <Graphics_DX12/DX12SwapChain.h>
 #include <Graphics_DX12/Fence.h>
 
@@ -461,117 +462,27 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     // 第三引数:頂点バッファービューの配列の先頭アドレス
     D3D12_VERTEX_BUFFER_VIEW vertView = vertBuffer.GetView();
     cmdList->IASetVertexBuffers(0, 1, &vertView);
-
-    const std::wstring VERTEX_SHADER = L"Shaders/HLSLs/BasicVertexShader.hlsl";
-    const std::wstring PIXEL_SHADER = L"Shaders/HLSLs/BasicPixelShader.hlsl";
     // Shaderオブジェクトを作成
     MFramework::ShaderResBlob vertShader;
     MFramework::ShaderResBlob pixelShader;
-    // 頂点シェーダー作成
-    //vertShader.InitFromFile(VERTEX_SHADER.c_str(), "BasicVS", "vs_5_1");
-    vertShader.InitFromCSO(L"BasicVertexShader.cso");
-    // ピクセルシェーダー作成
-    //pixelShader.InitFromFile(PIXEL_SHADER.c_str(), "BasicPS", "ps_5_1");
-    pixelShader.InitFromCSO(L"BasicPixelShader.cso");
-
-    // 頂点レイアウト作成
-    // 渡される頂点データなどをどのように解釈するかをGPUに教えてあげるため
-    D3D12_INPUT_ELEMENT_DESC _inputLayout[] = 
+    // 頂点シェーダー作成    
+    if (!vertShader.InitFromCSO(L"BasicVertexShader.cso"))
     {
-        // 座標情報
-        {
-            "POSITION",                                 // セマンティクス名(今回は座標なのでPOSITION)
-            0,                                          // 同じセマンティクス名のときに使うインデックス(0でよい) ※要調べ
-            DXGI_FORMAT_R32G32B32_FLOAT,                // フォーマット(データの解釈(float3のため,rbg毎に32bit,float型))
-            0,                                          // 入力スロットインデックス(0でよい)IASetVertexBuffersでスロットとバッファーとを関連付けている
-            D3D12_APPEND_ALIGNED_ELEMENT,               // データが連続していることを表す定義としてALIGNED_ELEMENT
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, // データの内容として、1頂点ごとにこのレイアウトが入っているを表す列挙※13.2.2で説明するらしい
-            0                                           // 一度に描画するインスタンスの数(インスタンシングを使わないため0でよい)※13.2.2で説明するらしい
-        },
-        // uv (追加)
-        {
-            "TEXCOORD",
-            0,
-            DXGI_FORMAT_R32G32_FLOAT,
-            0,
-            D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
-    };
-
-    // パイプラインステート作成
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC _graphicsPipelineDesc = {};
-
-    _graphicsPipelineDesc.pRootSignature = nullptr;
-    // シェーダーをセット
-    _graphicsPipelineDesc.VS.pShaderBytecode = vertShader.Get()->GetBufferPointer();
-    _graphicsPipelineDesc.VS.BytecodeLength = vertShader.Get()->GetBufferSize();
-    _graphicsPipelineDesc.PS.pShaderBytecode = pixelShader.Get()->GetBufferPointer();
-    _graphicsPipelineDesc.PS.BytecodeLength = pixelShader.Get()->GetBufferSize();
-
-    // サンプルマスクとラスタライザーステート設定
-    _graphicsPipelineDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-   
-    // ブレンドステート設定
-    // DX12の魔導書の範囲においては、マルチサンプリング（アンチエイリアシングの適用）でない場合、AlphaToCoverageEnableの値はαテストの有無を表す（？）
-    // マルチサンプリング時の「網羅率」まで考慮して描画を行う
-    // IndependentBlendEnableにtrueを指定すれば、合計8個のレンダーターゲットに対して別々にブレンドステート設定できる。falseだったら0番目が全てに適用する。
-    _graphicsPipelineDesc.BlendState.AlphaToCoverageEnable = false;
-    _graphicsPipelineDesc.BlendState.IndependentBlendEnable = false;
-
-    // BlendOpとLogicOpがあり、メンバーをどう演算するかを表している
-    // BlendEnableとLogicOpEnableは演算を行うかを表す変数で、両方同時にtrueになれず、どちらかを選ぶ
-    // 今回はブレンドしないため、両方をfalseにする
-    D3D12_RENDER_TARGET_BLEND_DESC _renderTargetBlendDesc = {};
-    _renderTargetBlendDesc.BlendEnable = false;
-    _renderTargetBlendDesc.LogicOpEnable = false;
-
-    // RGBAそれぞれの値を書き込むかどうか指定するための値
-    _renderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-    _graphicsPipelineDesc.BlendState.RenderTarget[0] = _renderTargetBlendDesc;
-
-    // まだアンチエイリアシングを使わないためfalse
-    _graphicsPipelineDesc.RasterizerState.MultisampleEnable = false;
-
-    _graphicsPipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;  // カリングしない ※背面カリング、PMDモデルには裏側にポリゴンがないものが多い
-    _graphicsPipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // 中身を塗りつぶす ※ポリゴンの中身、ソリッドモデル
-    _graphicsPipelineDesc.RasterizerState.DepthClipEnable = true;           // 深度方向のクリッピングは有効に　※後々必要になってくる
-
-    // 残り
-    _graphicsPipelineDesc.RasterizerState.FrontCounterClockwise = false;
-    _graphicsPipelineDesc.RasterizerState.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
-    _graphicsPipelineDesc.RasterizerState.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
-    _graphicsPipelineDesc.RasterizerState.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-    _graphicsPipelineDesc.RasterizerState.AntialiasedLineEnable = false;
-    _graphicsPipelineDesc.RasterizerState.ForcedSampleCount = 0;
-    _graphicsPipelineDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
-    _graphicsPipelineDesc.DepthStencilState.DepthEnable = false;
-    _graphicsPipelineDesc.DepthStencilState.StencilEnable = false;
-    
-    // 入力レイアウトを設定
-    _graphicsPipelineDesc.InputLayout.pInputElementDescs = _inputLayout;
-    _graphicsPipelineDesc.InputLayout.NumElements = _countof(_inputLayout); // 配列の数を取得するためのマクロ
-
-    // IBStripCutValueを設定
-    // トライアングルストリップのとき、「切り離せない頂点集合」を特定のインデックスで切り離すための指定を行うもの（詳しくはDX12魔導書P138）
-    // 今回特に使わない
-    _graphicsPipelineDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED; // カットなし
-
-    // PrimitiveTopologyTypeを設定
-    // 構成要素が「点」「線」「三角形」のどれなのかを指定
-    _graphicsPipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
-    // 設定したレンダーターゲットの数だけフォーマットを指定
-    _graphicsPipelineDesc.NumRenderTargets = 1;                             // 今回レンダーターゲットは一つしかないので1
-    _graphicsPipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;  // 0~1に正規化されたRGBA
-
-    // アンチエイリアシング設定
-    // 今回はしない
-    _graphicsPipelineDesc.SampleDesc.Count = 1;                     // サンプリングは1ピクセルにつき1
-    _graphicsPipelineDesc.SampleDesc.Quality = 0;                   // クオリティ最低
+      std::wstring vertShaderHLSLPath = L"Shaders/HLSLs/BasicVertexShader.hlsl";
+      if (!vertShader.InitFromFile(vertShaderHLSLPath.c_str(), "BasicVS", "vs_5_1"))
+      {
+        return -1;//bad design;
+      }
+    }
+    // ピクセルシェーダー作成
+    if (!pixelShader.InitFromCSO(L"BasicPixelShader.cso"))
+    {
+      std::wstring pixelShaderHLSLPath = L"Shaders/HLSLs/BasicPixelShader.hlsl";
+      if (!pixelShader.InitFromFile(pixelShaderHLSLPath.c_str(), "BasicPS", "ps_5_1"))
+      {
+        return -1;//bad design;
+      }
+    }
 
     // ルートシグネチャー作成
     const auto FILTER = D3D12_FILTER_MIN_MAG_MIP_LINEAR; // 線形補間
@@ -579,17 +490,9 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     rootSig.Init(device.Get(), FILTER);
 
-    _graphicsPipelineDesc.pRootSignature = rootSig.Get();
-
-    // グラフィックスパイプラインステートオブジェクト作成
-    ID3D12PipelineState* _pipelineState = nullptr;
-
-    result = device->CreateGraphicsPipelineState(&_graphicsPipelineDesc, IID_PPV_ARGS(&_pipelineState));
-
-    if (FAILED(result))
-    {
-        return -1;
-    }
+    // パイプラインステート設定
+    MFramework::PipelineState pipelineState;
+    pipelineState.Init(device.Get(), rootSig.Get(), &vertShader, &pixelShader, nullptr);
 
     // ビューポートを作成
     D3D12_VIEWPORT _viewport = {};
@@ -620,24 +523,13 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     #pragma region Main Loop
     // メインループ
-    while(true)
+    while(test.PollWNDMessage(msg))
     {
       angle += 0.1f;
       worldMatrix = DirectX::XMMatrixRotationY(angle);
       transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
       constBuffer.Remap(1, &transformMatrix);
-
-      if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-      {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-      }
-
-      if (msg.message == WM_QUIT)
-      {
-        break;
-      }
 
       // レンダーターゲットビューのインデックス取得
       UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -658,7 +550,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
       cmdList->ResourceBarrier(1, &barrierDesc);
 
       // パイプラインステートを設定
-      cmdList->SetPipelineState(_pipelineState); 
+      cmdList->SetPipelineState(pipelineState.Get()); 
 
       // 後の流れ:
       // レンダーターゲットを指定
@@ -743,7 +635,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
       // リセットし、命令オブジェクトをためていく
       // コマンドリストのクローズ状態を解除
-      cmdList.Reset(static_cast<int>(backBufferIndex), _pipelineState);
+      cmdList.Reset(static_cast<int>(backBufferIndex), pipelineState.Get());
 
       // フリップ
       // 第一引数:フリップまでの待ちフレーム数
@@ -775,6 +667,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
       pixelShader.Dispose();
       rtvHeap.Dispose();
       texHeap.Dispose();
+      pipelineState.Dispose();
     }
 
     return 0;
