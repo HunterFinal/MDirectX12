@@ -93,8 +93,12 @@ namespace MFramework
     DescriptorHandle handle;
     handle.CPUHandle = m_descHeap->GetCPUDescriptorHandleForHeapStart();
     handle.CPUHandle.ptr += index * m_incrementSize;
-    handle.GPUHandle = m_descHeap->GetGPUDescriptorHandleForHeapStart();
-    handle.GPUHandle.ptr += index * m_incrementSize;
+
+    if (m_heapType == D3D12DescHeapType::CBV_SRV_UAV)
+    {
+      handle.GPUHandle = m_descHeap->GetGPUDescriptorHandleForHeapStart();
+      handle.GPUHandle.ptr += index * m_incrementSize;
+    }
 
     return handle;
   }

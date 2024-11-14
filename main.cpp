@@ -38,7 +38,7 @@ Version : alpha_1.0.0
 #ifdef _DEBUG
 int main()
 #else
-int WINAPI WinMain(_In_ HINSTANCE,HINSTANCE,LPSTR,int)
+int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 #endif
 {
     // Window
@@ -57,9 +57,9 @@ int WINAPI WinMain(_In_ HINSTANCE,HINSTANCE,LPSTR,int)
     // メインループ
     while(test.PollWNDMessage(msg))
     {
-        g->PreProcess();
-        g->Render();
-        g->PostProcess();
+      g->PreProcess();
+      g->Render();
+      g->PostProcess();
     } 
    
     g->Terminate();

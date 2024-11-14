@@ -83,6 +83,7 @@ namespace MFramework
         CloseHandle(m_event);
         m_event = nullptr;
       }
+
       m_fence.Reset();
       m_fenceCount = 0;
       m_isInitialized = false;

@@ -102,7 +102,7 @@ namespace MFramework
                                             );
 
     assert(SUCCEEDED(result));
-
+    
     // マップする
     if (srcData != nullptr)
     {
@@ -138,7 +138,10 @@ namespace MFramework
 
   void ConstantBuffer::Dispose(void) noexcept
   {
-    unmap();
+    if (m_constantBuffer.Get() != nullptr)
+    {
+      unmap();
+    }
     m_constantBuffer.Reset();
   }
 
@@ -161,10 +164,7 @@ namespace MFramework
 
   void ConstantBuffer::unmap()
   {
-    if (m_constantBuffer.Get() != nullptr)
-    {
-      m_constantBuffer->Unmap(0, nullptr);
-    }
+    m_constantBuffer->Unmap(0, nullptr);
     m_mappedData = nullptr;
     m_isMapped = false;
   }

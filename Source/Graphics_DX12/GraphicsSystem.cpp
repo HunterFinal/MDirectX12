@@ -78,6 +78,7 @@ namespace MFramework
     , m_viewPort({})
     , m_scissorRect({})
     , m_clearColor(DEFAULT_SKYBOX_COLOR)
+    , m_debugDevice(nullptr)
   { }
 
   GraphicsSystem::~GraphicsSystem()
@@ -117,10 +118,19 @@ namespace MFramework
       const float wndHeight = static_cast<float>(wndRect.bottom - wndRect.top);
       const float wndAspect = wndWidth / wndHeight;
 
-
       // DX12初期化
       m_dxgiFactory.Init();
       m_device.Init(m_dxgiFactory.Get());
+      #ifdef _DEBUG
+        if (isDebugMode)
+        {
+          HRESULT result = m_device.Get()->QueryInterface(m_debugDevice.ReleaseAndGetAddressOf());
+        }
+      #else
+      {
+        // Maybe do something
+      }
+      #endif
       m_cmdList.Init(m_device.Get(), CMD_LIST_TYPE, FRAME_COUNT);
       m_cmdQueue.Init(m_device.Get(), CMD_LIST_TYPE);
       m_swapChain.Init(m_dxgiFactory.Get(), m_cmdQueue.Get(), hWnd, FRAME_COUNT);
@@ -141,7 +151,6 @@ namespace MFramework
       DirectX::TexMetadata metadata = {};
       DirectX::ScratchImage scratchImg = {};
       // テクスチャバッファー作成
-      ID3D12Resource* texBuffer = nullptr;
       {
 
         result = DirectX::LoadFromWICFile(
@@ -189,15 +198,13 @@ namespace MFramework
         resDesc.SampleDesc.Quality = 0;
 
         // 中間バッファー作成
-        ID3D12Resource* uploadBuffer = nullptr;
-
         result = m_device->CreateCommittedResource(
                                                   &uploadHeapProp,
                                                   D3D12_HEAP_FLAG_NONE, //特にフラグなし
                                                   &resDesc,
                                                   D3D12_RESOURCE_STATE_GENERIC_READ,    // CPUから書き込み可能だが、GPUから見ると読み取り専用
                                                   nullptr,
-                                                  IID_PPV_ARGS(&uploadBuffer)
+                                                  IID_PPV_ARGS(m_temp_uploadBuffer.ReleaseAndGetAddressOf())
                                                 );     
 
         assert(SUCCEEDED(result));
@@ -227,14 +234,14 @@ namespace MFramework
                                                   &resDesc,
                                                   D3D12_RESOURCE_STATE_COPY_DEST, // コピー先
                                                   nullptr,
-                                                  IID_PPV_ARGS(&texBuffer)
+                                                  IID_PPV_ARGS(m_temp_texBuffer.ReleaseAndGetAddressOf())
                                                 );
 
         assert(SUCCEEDED(result));
 
         // アップロードリソースへのマップ
         UINT8* mapforImg = nullptr; // img->pixelsと同じ型にする
-        result = uploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapforImg));
+        result = m_temp_uploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapforImg));
 
         // 元データをコピーする際に、元データのRowPitchとバッファーのRowPitchが合わないため、
         // 一行ごとにコピーして行頭が合うようにする
@@ -251,12 +258,12 @@ namespace MFramework
           mapforImg += rowPitch;
         }
 
-        uploadBuffer->Unmap(0, nullptr); //アンマップ
+        m_temp_uploadBuffer->Unmap(0, nullptr); //アンマップ
 
         D3D12_TEXTURE_COPY_LOCATION src = {};
 
         // コピー元(アップロード側)設定
-        src.pResource = uploadBuffer;   // 中間バッファー
+        src.pResource = m_temp_uploadBuffer.Get();   // 中間バッファー
         // D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINTの場合、pResourceはバッファーリソースを指す必要がある
         // D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEXの場合、pResourceはテクスチャリソースを指す必要がある
         src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;  // フットプリント指定
@@ -273,7 +280,7 @@ namespace MFramework
         D3D12_TEXTURE_COPY_LOCATION dst = {};
 
         // コピー先設定
-        dst.pResource = texBuffer;
+        dst.pResource = m_temp_texBuffer.Get();
         dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
         dst.SubresourceIndex = 0;
 
@@ -284,7 +291,7 @@ namespace MFramework
 
           barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
           barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-          barrierDesc.Transition.pResource = texBuffer;
+          barrierDesc.Transition.pResource = m_temp_texBuffer.Get();
           barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
           barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;    // ここが重要
           barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE; // ここが重要
@@ -298,7 +305,7 @@ namespace MFramework
 
           m_fence.Wait(m_cmdQueue.Get());
 
-          m_cmdList.Reset(0);
+          m_cmdList.Reset(0, nullptr);
         }
 
       }
@@ -325,7 +332,7 @@ namespace MFramework
       if (texHeapHandle.HasCPUHandle())
       {
         m_device->CreateShaderResourceView(
-                                            texBuffer,                                          // ビューと関連付けるバッファー
+                                            m_temp_texBuffer.Get(),                                          // ビューと関連付けるバッファー
                                             &srvDesc,                                           // 先ほど設定したテクスチャ設定情報
                                             texHeapHandle.CPUHandle                           // ヒープのどこに割り当てるか
                                           );
@@ -387,6 +394,9 @@ namespace MFramework
       D3D12_VERTEX_BUFFER_VIEW vertView = m_vertBuffer.GetView();
       m_cmdList->IASetVertexBuffers(0, 1, &vertView);
 
+      // TODO   
+      m_cmdList->Close();
+
       // 頂点シェーダー作成    
       if (!m_vertShader.InitFromCSO(L"BasicVertexShader.cso"))
       {
@@ -428,6 +438,7 @@ namespace MFramework
       m_scissorRect.left = 0;
       m_scissorRect.right = m_scissorRect.left + static_cast<LONG>(wndWidth);
       m_scissorRect.bottom = m_scissorRect.top + static_cast<LONG>(wndHeight);
+      
     }
   }
 
@@ -555,10 +566,6 @@ namespace MFramework
     // フェンスを使ってGPUの処理が終わるまで待つ
     m_fence.Wait(m_cmdQueue.Get());
 
-    // リセットし、命令オブジェクトをためていく
-    // コマンドリストのクローズ状態を解除
-    m_cmdList.Reset(static_cast<int>(backBufferIndex), m_pipelineState.Get());
-
     // フリップ
     // 第一引数:フリップまでの待ちフレーム数
     // ※0にするとPresentメソッドが即時復帰して次のフレームが始まってしまいます。
@@ -571,7 +578,6 @@ namespace MFramework
   void GraphicsSystem::Terminate() noexcept
   {
     m_dxgiFactory.Dispose();
-    m_device.Dispose();
     m_cmdList.Dispose();
     m_cmdQueue.Dispose();
     m_swapChain.Dispose();
@@ -593,5 +599,18 @@ namespace MFramework
     m_pixelShader.Dispose();
     m_rootSig.Dispose();
     m_pipelineState.Dispose();
+
+    // TODO
+    m_temp_texBuffer.Reset();
+    m_temp_uploadBuffer.Reset();
+
+    m_device.Dispose();
+    
+    if (m_debugDevice.Get() != nullptr)
+    {
+      m_debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
+      m_debugDevice.Reset();
+    }
+
   }
 }

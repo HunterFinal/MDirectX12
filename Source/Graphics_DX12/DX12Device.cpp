@@ -16,8 +16,6 @@ Encoding : UTF-8
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#pragma comment(lib,"d3d12.lib")
-#pragma comment(lib,"dxgi.lib")
 
 #include <vector>
 #include <string>
@@ -136,22 +134,24 @@ namespace MFramework
       return;
     }
    
-    IDXGIAdapter* foundAdapter = nullptr;
-    GetAdapter(dxgiFactory, &foundAdapter);
+    ComPtr<IDXGIAdapter> foundAdapter = nullptr;
+    GetAdapter(dxgiFactory, foundAdapter.ReleaseAndGetAddressOf());
 
     for (auto lv : levels)
     {
-      if (D3D12CreateDevice(foundAdapter, lv, IID_PPV_ARGS(m_device.ReleaseAndGetAddressOf())) == S_OK)
+      if (SUCCEEDED(D3D12CreateDevice(foundAdapter.Get(), lv, IID_PPV_ARGS(m_device.ReleaseAndGetAddressOf()))))
       {
         break;
       }
     }
 
     assert(m_device.Get() != nullptr);
+
+    m_device->SetName(L"MyDevice");
   }
 
   void DX12Device::Dispose() noexcept
-  {
+  { 
     m_device.Reset();
   }
 }

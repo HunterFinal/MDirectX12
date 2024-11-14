@@ -80,6 +80,11 @@ namespace MFramework
         D3D12_RECT  m_scissorRect;
 
         Color m_clearColor;
+        ComPtr<ID3D12DebugDevice> m_debugDevice;
+
+        // TODO Temp
+        ComPtr<ID3D12Resource> m_temp_texBuffer;
+        ComPtr<ID3D12Resource> m_temp_uploadBuffer;
 
     #pragma endregion private variables
     // endregion of private variables

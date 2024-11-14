@@ -34,16 +34,16 @@ namespace MFramework
     Dispose();
   }
 
-  RenderTarget::RenderTarget(RenderTarget&& other)
+  RenderTarget::RenderTarget(RenderTarget&& other) noexcept
   {
     m_renderTarget = other.m_renderTarget;
-    other.m_renderTarget = nullptr;
+    other.m_renderTarget.Reset();
   }
 
-  RenderTarget& RenderTarget::operator=(RenderTarget&& other) &
+  RenderTarget& RenderTarget::operator=(RenderTarget&& other) & noexcept
   {
     m_renderTarget = other.m_renderTarget;
-    other.m_renderTarget = nullptr;
+    other.m_renderTarget.Reset();
 
     return *this;
   }
@@ -68,6 +68,8 @@ namespace MFramework
     result = swapChain->GetBuffer(static_cast<UINT>(index), IID_PPV_ARGS(m_renderTarget.ReleaseAndGetAddressOf()));
 
     assert(SUCCEEDED(result));
+
+    m_renderTarget->SetName(L"Render Target");
 
     if (descHandle->HasCPUHandle())
     {

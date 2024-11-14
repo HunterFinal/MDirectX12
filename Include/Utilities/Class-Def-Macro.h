@@ -26,8 +26,8 @@ Encoding : UTF-8
 #define GENERATE_DESTRUCTOR(type) ~type()
 #define GENERATE_COPY_CONSTRUCTOR(type) type(CONST_REF(type))
 #define GENERATE_COPY_ASSIGNMENT(type) L_VALUE_REF(type) operator=(CONST_REF(type)) &
-#define GENERATE_MOVE_CONSTRUCTOR(type) type(R_VALUE_REF(type))
-#define GENERATE_MOVE_ASSIGNMENT(type) L_VALUE_REF(type) operator=(R_VALUE_REF(type)) &
+#define GENERATE_MOVE_CONSTRUCTOR(type) type(R_VALUE_REF(type)) noexcept
+#define GENERATE_MOVE_ASSIGNMENT(type) L_VALUE_REF(type) operator=(R_VALUE_REF(type)) & noexcept
 
 #define DELETE_FUNC(func) func = delete;
 #define DEFAULT_FUNC(func) func = default;
