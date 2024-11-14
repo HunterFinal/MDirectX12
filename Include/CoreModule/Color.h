@@ -31,8 +31,6 @@ namespace MGameEngine
 
       static const Color black;
     };
-
-    const Color Color::black = {0.0f, 0.0f, 0.0f, 1.0f};
   }
 }
 

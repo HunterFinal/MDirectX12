@@ -568,7 +568,7 @@ namespace MFramework
     m_swapChain->Present(1, 0);
   }
 
-  void GraphicsSystem::Terminate()
+  void GraphicsSystem::Terminate() noexcept
   {
     m_dxgiFactory.Dispose();
     m_device.Dispose();

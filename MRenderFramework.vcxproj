@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Source\CoreModule\Color.cpp" />
     <ClCompile Include="Source\Debugger\Debug.cpp" />
     <ClCompile Include="Source\Debugger\DebugHelper.cpp" />
     <ClCompile Include="Source\Debugger\DefaultLogger.cpp" />
