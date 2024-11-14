@@ -40,7 +40,7 @@ namespace MFramework
       GENERATE_CLASS_NO_COPY(SwapChain)
 
       public:
-        void Init(IDXGIFactory6*, ID3D12CommandQueue*, MWindow::IWindowInfo*, int);
+        void Init(IDXGIFactory6*, ID3D12CommandQueue*, HWND, size_t);
 
       public:
         void Dispose(void) noexcept override;

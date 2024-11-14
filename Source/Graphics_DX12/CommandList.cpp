@@ -53,7 +53,7 @@ namespace MFramework
   {
     Dispose();
   }
-  void CommandList::Init(ID3D12Device* device, D3D12_COMMAND_LIST_TYPE type, int frameCount)
+  void CommandList::Init(ID3D12Device* device, D3D12_COMMAND_LIST_TYPE type, size_t frameCount)
   {
     if (m_commandList.Get() != nullptr)
     {

@@ -79,6 +79,8 @@ Version : alpha_1.0.0
 
 #include <Graphics_DX12/ShaderResBlob.h>
 
+#include <Graphics_DX12/GraphicsSystem.h>
+
 #pragma endregion
 // end region of DX12 Wrapper
 
@@ -167,7 +169,7 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
     #pragma region D3D12 SwapChain for Double buffering
     // スワップチェーンオブジェクト
     MFramework::SwapChain swapChain;
-    swapChain.Init(dxgiFactory.Get(), cmdQueue.Get(), static_cast<MWindow::IWindowInfo*>(&test), FRAME_COUNT);
+    swapChain.Init(dxgiFactory.Get(), cmdQueue.Get(), test.GetHWND(), FRAME_COUNT);
 
     #pragma endregion
     // end region of D3D12 SwapChain for Double buffering
@@ -521,154 +523,156 @@ int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int)
 
     auto texHeapPtr = texHeap.Get();
 
+    IGraphics
+
     #pragma region Main Loop
     // メインループ
     while(test.PollWNDMessage(msg))
     {
-      angle += 0.1f;
-      worldMatrix = DirectX::XMMatrixRotationY(angle);
-      transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
+      //angle += 0.1f;
+      //worldMatrix = DirectX::XMMatrixRotationY(angle);
+      //transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-      constBuffer.Remap(1, &transformMatrix);
+      //constBuffer.Remap(1, &transformMatrix);
 
-      // レンダーターゲットビューのインデックス取得
-      UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+      //// レンダーターゲットビューのインデックス取得
+      //UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
-      // リソースバリアを設定
-      D3D12_RESOURCE_BARRIER barrierDesc = {};
+      //// リソースバリアを設定
+      //D3D12_RESOURCE_BARRIER barrierDesc = {};
 
-      barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;                                // 遷移
-      barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;                                     // 特に指定なし
-      barrierDesc.Transition.pResource = renderTargets[backBufferIndex].Get();                  // バックバッファーリソース
-      barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;             // サブリソース番号
-      barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;                        // 直前はPRESENT状態
-      barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;                   // 今からレンダーターゲット状態
+      //barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;                                // 遷移
+      //barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;                                     // 特に指定なし
+      //barrierDesc.Transition.pResource = renderTargets[backBufferIndex].Get();                  // バックバッファーリソース
+      //barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;             // サブリソース番号
+      //barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;                        // 直前はPRESENT状態
+      //barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;                   // 今からレンダーターゲット状態
 
-      // バリア指定実行
-      // 第一引数:設定バリアの数(現時点では1でよい)
-      // 第二引数:設定バリア構造体アドレス(配列で同時に設定できる)
-      cmdList->ResourceBarrier(1, &barrierDesc);
+      //// バリア指定実行
+      //// 第一引数:設定バリアの数(現時点では1でよい)
+      //// 第二引数:設定バリア構造体アドレス(配列で同時に設定できる)
+      //cmdList->ResourceBarrier(1, &barrierDesc);
 
-      // パイプラインステートを設定
-      cmdList->SetPipelineState(pipelineState.Get()); 
+      //// パイプラインステートを設定
+      //cmdList->SetPipelineState(pipelineState.Get()); 
 
-      // 後の流れ:
-      // レンダーターゲットを指定
-      // 画面のクリアが終わったら
-      // IDXGISwapchain::Present()メソッドを実行
+      //// 後の流れ:
+      //// レンダーターゲットを指定
+      //// 画面のクリアが終わったら
+      //// IDXGISwapchain::Present()メソッドを実行
 
-      // レンダーターゲットを指定
-      auto rtvHandle = rtvHeap.GetHandle(backBufferIndex);
+      //// レンダーターゲットを指定
+      //auto rtvHandle = rtvHeap.GetHandle(backBufferIndex);
 
-      // レンダーターゲットビューをセット 
-      // 第一引数:レンダーターゲット数(今回は一つだけで1でよい)
-      // 第二引数:レンダーターゲットハンドル先頭アドレス
-      // TODO 第三引数:複数時に連続しているか
-      // 第四引数:深度ステンシルバッファービューのハンドル(nullptrでよい)
-      if (rtvHandle.HasCPUHandle())
-      {
-        cmdList->OMSetRenderTargets(1, &rtvHandle.CPUHandle, false, nullptr);
-        // 画面クリア
-        float r = 0.0f;
-        float g = 0.0f;
-        float b = 0.0f;
-        r = static_cast<float>((0xff & frame >> 16) / 255.0f);
-        g = static_cast<float>((0xff & frame >> 8) / 255.0f);
-        b = static_cast<float>((0xff & frame >> 0) / 255.0f);
-        float clearColor[] = {r, g, b, 1.f};
-        cmdList->ClearRenderTargetView(rtvHandle.CPUHandle, clearColor, 0, nullptr);
-      }
-      ++frame;
+      //// レンダーターゲットビューをセット 
+      //// 第一引数:レンダーターゲット数(今回は一つだけで1でよい)
+      //// 第二引数:レンダーターゲットハンドル先頭アドレス
+      //// TODO 第三引数:複数時に連続しているか
+      //// 第四引数:深度ステンシルバッファービューのハンドル(nullptrでよい)
+      //if (rtvHandle.HasCPUHandle())
+      //{
+      //  cmdList->OMSetRenderTargets(1, &rtvHandle.CPUHandle, false, nullptr);
+      //  // 画面クリア
+      //  float r = 0.0f;
+      //  float g = 0.0f;
+      //  float b = 0.0f;
+      //  r = static_cast<float>((0xff & frame >> 16) / 255.0f);
+      //  g = static_cast<float>((0xff & frame >> 8) / 255.0f);
+      //  b = static_cast<float>((0xff & frame >> 0) / 255.0f);
+      //  float clearColor[] = {r, g, b, 1.f};
+      //  cmdList->ClearRenderTargetView(rtvHandle.CPUHandle, clearColor, 0, nullptr);
+      //}
+      //++frame;
 
-      // ルートシグネチャー設定
+      //// ルートシグネチャー設定
 
-      cmdList->SetGraphicsRootSignature(rootSig.Get());
-      cmdList->SetDescriptorHeaps(1, &texHeapPtr);
-      cmdList->RSSetViewports(1, &_viewport);
-      cmdList->RSSetScissorRects(1, &_scissorRect);
+      //cmdList->SetGraphicsRootSignature(rootSig.Get());
+      //cmdList->SetDescriptorHeaps(1, &texHeapPtr);
+      //cmdList->RSSetViewports(1, &_viewport);
+      //cmdList->RSSetScissorRects(1, &_scissorRect);
 
-      if (texHeapHandle.HasGPUHandle())
-      {
-        cmdList->SetGraphicsRootDescriptorTable(
-                                                  0,           // ルートパラメーターインデックス 
-                                                  texHeapHandle.GPUHandle   // ヒープアドレス
-                                                );
-      }
+      //if (texHeapHandle.HasGPUHandle())
+      //{
+      //  cmdList->SetGraphicsRootDescriptorTable(
+      //                                            0,           // ルートパラメーターインデックス 
+      //                                            texHeapHandle.GPUHandle   // ヒープアドレス
+      //                                          );
+      //}
 
-      cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+      //cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-      // 頂点バッファーを設定
-      // 第一引数:スロット番号
-      // 第二引数:頂点バッファービューの数
-      // 第三引数:頂点バッファービューの配列
+      //// 頂点バッファーを設定
+      //// 第一引数:スロット番号
+      //// 第二引数:頂点バッファービューの数
+      //// 第三引数:頂点バッファービューの配列
 
-      D3D12_VERTEX_BUFFER_VIEW vertView = vertBuffer.GetView();
-      D3D12_INDEX_BUFFER_VIEW idxView = idxBuffer.GetView();
-      cmdList->IASetVertexBuffers(0, 1, &vertView);
-      cmdList->IASetIndexBuffer(&idxView);
-      
-      // 描画命令を設定
-      // 第一引数:頂点インデックス数
-      // 第二引数:インスタンス数
-      // 第三引数:頂点データのオフセット
-      // 第四引数:インスタンスのオフセット
-      // ※インスタンス数は同じプリミティブをいくつ表示するかという意味です
-      cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+      //D3D12_VERTEX_BUFFER_VIEW vertView = vertBuffer.GetView();
+      //D3D12_INDEX_BUFFER_VIEW idxView = idxBuffer.GetView();
+      //cmdList->IASetVertexBuffers(0, 1, &vertView);
+      //cmdList->IASetIndexBuffer(&idxView);
+      //
+      //// 描画命令を設定
+      //// 第一引数:頂点インデックス数
+      //// 第二引数:インスタンス数
+      //// 第三引数:頂点データのオフセット
+      //// 第四引数:インスタンスのオフセット
+      //// ※インスタンス数は同じプリミティブをいくつ表示するかという意味です
+      //cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
-      barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;    // 直前はレンダーターゲット状態
-      barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;           // 今からPRESENT状態
-      cmdList->ResourceBarrier(1, &barrierDesc);
+      //barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;    // 直前はレンダーターゲット状態
+      //barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;           // 今からPRESENT状態
+      //cmdList->ResourceBarrier(1, &barrierDesc);
 
-      // ためておいた命令を実行
-      // その前に命令をクローズが必須
-      cmdList->Close();
+      //// ためておいた命令を実行
+      //// その前に命令をクローズが必須
+      //cmdList->Close();
 
-      // 命令の実行
-      ID3D12CommandList* cmdLists[] = { cmdList.Get()};
+      //// 命令の実行
+      //ID3D12CommandList* cmdLists[] = { cmdList.Get()};
 
-      // 第一引数:実行するコマンドリストの数(1でよい)
-      // 第二引数:コマンドリスト配列の先頭アドレス
-      cmdQueue.Execute(1, cmdLists);
+      //// 第一引数:実行するコマンドリストの数(1でよい)
+      //// 第二引数:コマンドリスト配列の先頭アドレス
+      //cmdQueue.Execute(1, cmdLists);
 
-      // フェンスを使ってGPUの処理が終わるまで待つ
-      fence.Wait(cmdQueue.Get());
+      //// フェンスを使ってGPUの処理が終わるまで待つ
+      //fence.Wait(cmdQueue.Get());
 
-      // リセットし、命令オブジェクトをためていく
-      // コマンドリストのクローズ状態を解除
-      cmdList.Reset(static_cast<int>(backBufferIndex), pipelineState.Get());
+      //// リセットし、命令オブジェクトをためていく
+      //// コマンドリストのクローズ状態を解除
+      //cmdList.Reset(static_cast<int>(backBufferIndex), pipelineState.Get());
 
-      // フリップ
-      // 第一引数:フリップまでの待ちフレーム数
-      // ※0にするとPresentメソッドが即時復帰して次のフレームが始まってしまいます。
-      // ※1にすると垂直同期を待つ
-      // 第二引数:さまざまな指定を行います
-      // テスト用出力やステレオをモノラル表示など特殊な用途であるため、今回は0にする
-      swapChain->Present(1, 0);
+      //// フリップ
+      //// 第一引数:フリップまでの待ちフレーム数
+      //// ※0にするとPresentメソッドが即時復帰して次のフレームが始まってしまいます。
+      //// ※1にすると垂直同期を待つ
+      //// 第二引数:さまざまな指定を行います
+      //// テスト用出力やステレオをモノラル表示など特殊な用途であるため、今回は0にする
+      //swapChain->Present(1, 0);
 
       #pragma region Direct3D12  
       // DirectX処理
     } 
-    #pragma endregion
-    // end region of Main Loop
+    //#pragma endregion
+    //// end region of Main Loop
 
-    // Dispose resources
-    {
-      test.Dispose();
-      device.Dispose();
-      dxgiFactory.Dispose();
-      cmdList.Dispose();
-      cmdQueue.Dispose();
-      swapChain.Dispose();
-      rootSig.Dispose();
-      vertBuffer.Dispose();
-      idxBuffer.Dispose();
-      constBuffer.Dispose();
-      vertShader.Dispose();
-      pixelShader.Dispose();
-      rtvHeap.Dispose();
-      texHeap.Dispose();
-      pipelineState.Dispose();
-    }
+    //// Dispose resources
+    //{
+    //  test.Dispose();
+    //  device.Dispose();
+    //  dxgiFactory.Dispose();
+    //  cmdList.Dispose();
+    //  cmdQueue.Dispose();
+    //  swapChain.Dispose();
+    //  rootSig.Dispose();
+    //  vertBuffer.Dispose();
+    //  idxBuffer.Dispose();
+    //  constBuffer.Dispose();
+    //  vertShader.Dispose();
+    //  pixelShader.Dispose();
+    //  rtvHeap.Dispose();
+    //  texHeap.Dispose();
+    //  pipelineState.Dispose();
+    //}
 
     return 0;
 }

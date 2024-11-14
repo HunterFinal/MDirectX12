@@ -18,6 +18,15 @@ Encoding : UTF-8
 #ifndef M_GRAPHICS_INCLUDE
 #define M_GRAPHICS_INCLUDE
 
+// D3D12 include
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <DirectXMath.h>
+#include <d3dcompiler.h>
+
+// D3D12 library include
+#include <DirectXTex.h>
+
 // wrapper class header include
 #include <Graphics_DX12/DX12Device.h>
 #include <Graphics_DX12/DX12DXGIFactory.h>

@@ -39,7 +39,7 @@ namespace MFramework
       GENERATE_CLASS_NO_COPY(CommandList)
 
       public:
-        void Init(ID3D12Device*, D3D12_COMMAND_LIST_TYPE, int);
+        void Init(ID3D12Device*, D3D12_COMMAND_LIST_TYPE, size_t);
         void Reset(int, ID3D12PipelineState* = nullptr);
 
       public:
