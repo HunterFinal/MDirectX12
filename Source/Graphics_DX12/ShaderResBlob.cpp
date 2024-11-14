@@ -16,9 +16,7 @@ Encoding : UTF-8
 #include <Graphics_DX12/ShaderResBlob.h>
 
 #include <d3d12.h>
-
 #include <d3dcompiler.h>
-#pragma comment(lib, "d3dcompiler.lib")
 
 #include <FileUtil.h>
 

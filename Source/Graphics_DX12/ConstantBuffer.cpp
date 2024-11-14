@@ -14,7 +14,6 @@ Encoding : UTF-8
 */
 
 #include <Graphics_DX12/ConstantBuffer.h>
-#include <Graphics_DX12/DescriptorHandle.h>
 
 #include <cassert>
 

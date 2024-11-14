@@ -18,8 +18,6 @@ Encoding : UTF-8
 #include <Graphics_DX12/CommandList.h>
 
 #include <d3d12.h>
-#pragma comment(lib,"d3d12.lib")
-
 #include <cassert>
 
 // TODO

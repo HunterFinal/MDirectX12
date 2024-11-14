@@ -1,3 +1,5 @@
+#ifdef _DEBUG
+
 #include <Debug.h>
 
 #include <iostream>
@@ -63,3 +65,5 @@ namespace MDebug
     }
 
 }
+
+#endif

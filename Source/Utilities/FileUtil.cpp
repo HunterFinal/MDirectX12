@@ -59,7 +59,5 @@ namespace MFramework
     }
 
     return false;
-
   }
-
 }

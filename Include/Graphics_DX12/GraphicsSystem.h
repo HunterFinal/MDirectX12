@@ -9,7 +9,7 @@ Update History: 2024/11/12 Create
 
 Version : alpha_1.0.0
 
-Encoding : UTF-8 
+Encoding : UTF-8
 
 */
 
