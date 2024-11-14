@@ -18,6 +18,7 @@ Encoding : UTF-8
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
+
 #pragma comment(lib, "DirectXTex.lib")
 
 #include <string>
@@ -120,25 +121,6 @@ namespace MFramework
       // DX12初期化
       m_dxgiFactory.Init();
       m_device.Init(m_dxgiFactory.Get());
-
-      if (isDebugMode)
-      {
-        #ifdef _DEBUG
-          ComPtr<ID3D12DebugDevice> debugInterface = nullptr;
-
-          result = m_device.Get()->QueryInterface(debugInterface.ReleaseAndGetAddressOf());
-          if (SUCCEEDED(result))
-          {
-            debugInterface->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
-            debugInterface.Reset();
-          }
-        #else
-          {
-            // Do something later
-          }
-        #endif
-      }
-
       m_cmdList.Init(m_device.Get(), CMD_LIST_TYPE, FRAME_COUNT);
       m_cmdQueue.Init(m_device.Get(), CMD_LIST_TYPE);
       m_swapChain.Init(m_dxgiFactory.Get(), m_cmdQueue.Get(), hWnd, FRAME_COUNT);
@@ -586,7 +568,7 @@ namespace MFramework
     m_swapChain->Present(1, 0);
   }
 
-  void GraphicsSystem::Terminate() noexcept
+  void GraphicsSystem::Terminate()
   {
     m_dxgiFactory.Dispose();
     m_device.Dispose();

@@ -45,15 +45,6 @@
     <Filter Include="Source File\Utilities">
       <UniqueIdentifier>{806ecd71-66f9-408c-a0fd-437af1cff4d2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source File\CoreModule">
-      <UniqueIdentifier>{3718f124-ff95-470a-bb9e-c6b7fa5c281b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header File\CoreModule">
-      <UniqueIdentifier>{0b728313-ae1a-4ff7-b884-b0cbd9569c3d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header File\Interfaces">
-      <UniqueIdentifier>{4fb430a6-3092-43ff-913b-2ed31aa46072}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -71,25 +62,13 @@
     <ClCompile Include="Source\Debugger\DebugHelper.cpp">
       <Filter>Source File\Debugger</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Utilities\FileUtil.cpp">
-      <Filter>Source File\Utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\CoreModule\Color.cpp">
-      <Filter>Source File\CoreModule</Filter>
+    <ClCompile Include="Source\Graphics_DX12\Fence.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics_DX12\CommandList.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\CommandQueue.cpp">
-      <Filter>Source File\Graphics_DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\ConstantBuffer.cpp">
-      <Filter>Source File\Graphics_DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\DescriptorHandle.cpp">
-      <Filter>Source File\Graphics_DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\DescriptorHeap.cpp">
+    <ClCompile Include="Source\Graphics_DX12\VertexBufferContainer.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics_DX12\DX12Device.cpp">
@@ -98,31 +77,40 @@
     <ClCompile Include="Source\Graphics_DX12\DX12DXGIFactory.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\CommandQueue.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Graphics_DX12\DX12SwapChain.cpp">
-      <Filter>Source File\Graphics_DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\Fence.cpp">
-      <Filter>Source File\Graphics_DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\GraphicsSystem.cpp">
-      <Filter>Source File\Graphics_DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\IndexBufferContainer.cpp">
-      <Filter>Source File\Graphics_DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\PipelineState.cpp">
-      <Filter>Source File\Graphics_DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\RenderTarget.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics_DX12\RootSignature.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\IndexBufferContainer.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\ConstantBuffer.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\DescriptorHandle.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Graphics_DX12\ShaderResBlob.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Graphics_DX12\VertexBufferContainer.cpp">
+    <ClCompile Include="Source\Utilities\FileUtil.cpp">
+      <Filter>Source File\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\DescriptorHeap.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\RenderTarget.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\PipelineState.cpp">
+      <Filter>Source File\Graphics_DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics_DX12\GraphicsSystem.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
   </ItemGroup>
@@ -207,18 +195,6 @@
     </ClInclude>
     <ClInclude Include="Include\Graphics_DX12\Texture.h">
       <Filter>Header File\Graphics_DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\CoreModule\Color.h">
-      <Filter>Header File\CoreModule</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Utilities\FileUtil.h">
-      <Filter>Header File\Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Utilities\Interfaces\IDisposable.h">
-      <Filter>Header File\Interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Utilities\Interfaces\IWindowInfo.h">
-      <Filter>Header File\Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

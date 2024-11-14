@@ -10,7 +10,6 @@ Update History: 2024/09/19 Create
 Version : alpha_1.0.0
 
 */
-#ifdef _DEBUG
 
 #include <DefaultLogger.h>
 
@@ -33,5 +32,3 @@ void DefaultLogger::LogWarningFormat(const char* format, va_list args)
 void DefaultLogger::LogErrorFormat(const char* format, va_list args)
 {
 }
-
-#endif

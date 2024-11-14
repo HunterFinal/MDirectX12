@@ -15,17 +15,12 @@ Encoding : UTF-8
 
 */
 
-
-
 #include <Window/BaseWindow.h>
 
 #include <tchar.h> // use of _T macro
 
 #include <sstream>
-
-#ifdef _DEBUG
 #include <DebugHelper>
-#endif
 
 namespace
 {
