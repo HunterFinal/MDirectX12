@@ -26,6 +26,8 @@ namespace MFramework
   {
     class FileUtility final
     {
+      private:
+        FileUtility() = delete;
       public:
         static bool SearchFilePath(const wchar_t* fileName, std::wstring& filePath);
     };

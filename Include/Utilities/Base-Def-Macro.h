@@ -33,9 +33,11 @@ Encoding : UTF-8
 #define HAS_CPP_11 CPP_STANDARD >= 201103L
 
 #if HAS_CPP_11
+#define ALIAS(type, typeAlias) using typeAlias = type;
 #define REF_ALIAS(type) using Ref = L_VALUE_REF(type);
 #define CONST_REF_ALIAS(type) using Const_Ref = CONST_VAR(L_VALUE_REF(type));
 #else
+#define ALIAS(type, typeAlias) typedef typeAlias type;
 #define REF_ALIAS(type) typedef type& Ref;
 #define CONST_REF_ALIAS(type) typedef CONST(type&) Const_Ref;
 #endif

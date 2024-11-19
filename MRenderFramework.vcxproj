@@ -165,7 +165,9 @@
     <ClCompile Include="Source\Graphics_DX12\RenderTarget.cpp" />
     <ClCompile Include="Source\Graphics_DX12\RootSignature.cpp" />
     <ClCompile Include="Source\Graphics_DX12\ShaderResBlob.cpp" />
+    <ClCompile Include="Source\Graphics_DX12\Texture.cpp" />
     <ClCompile Include="Source\Graphics_DX12\VertexBufferContainer.cpp" />
+    <ClCompile Include="Source\Utilities\D3D12EasyUtil.cpp" />
     <ClCompile Include="Source\Utilities\FileUtil.cpp" />
     <ClCompile Include="Source\Window\BaseWindow.cpp" />
   </ItemGroup>
@@ -194,6 +196,8 @@
     <ClInclude Include="Include\Utilities\Base-Def-Macro.h" />
     <ClInclude Include="Include\Utilities\Class-Def-Macro.h" />
     <ClInclude Include="Include\Utilities\ComPtr.h" />
+    <ClInclude Include="Include\Utilities\D3D12EasyUtil.h" />
+    <ClInclude Include="Include\Utilities\FileUtil.h" />
     <ClInclude Include="Include\Utilities\RandomGenerator.hpp" />
     <ClInclude Include="Include\Window\BaseWindow.h" />
     <ClInclude Include="Obsolete Code\ObsoleteCode.h" />

@@ -75,6 +75,8 @@ namespace MFramework
         ShaderResBlob m_pixelShader;
         RootSignature m_rootSig;
         PipelineState m_pipelineState;
+        // TODO Temp
+        Texture m_texture;
 
         D3D12_VIEWPORT m_viewPort;
         D3D12_RECT  m_scissorRect;
@@ -82,7 +84,7 @@ namespace MFramework
         Color m_clearColor;
         ComPtr<ID3D12DebugDevice> m_debugDevice;
 
-        // TODO Temp
+        // TODO temp
         ComPtr<ID3D12Resource> m_temp_texBuffer;
         ComPtr<ID3D12Resource> m_temp_uploadBuffer;
 

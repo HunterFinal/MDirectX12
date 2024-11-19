@@ -21,6 +21,8 @@ Encoding : UTF-8
 
 #pragma comment(lib, "DirectXTex.lib")
 
+#include <FileUtil.h> 
+#include <D3D12EasyUtil.h>
 #include <string>
 #include <cassert>
 
@@ -44,16 +46,6 @@ namespace
   constexpr D3D12_FILTER FILTER = D3D12_FILTER_MIN_MAG_MIP_LINEAR; // 線形補間
   const Color DEFAULT_SKYBOX_COLOR = Color::black; 
 
-  /// @brief
-  /// アライメントに揃えたサイズを返す
-  /// @param size 元のサイズ
-  /// @param alignment アラインメントサイズ
-  /// @return アラインメントを揃えたサイズ
-  size_t AlignmentedSize(size_t size, size_t alignment)
-  {
-    return size + alignment - size % alignment;
-  }
-
 }
 
 namespace MFramework
@@ -74,7 +66,8 @@ namespace MFramework
     , m_vertShader()
     , m_pixelShader()
     , m_rootSig()
-    , m_pipelineState() 
+    , m_pipelineState()
+    , m_texture() 
     , m_viewPort({})
     , m_scissorRect({})
     , m_clearColor(DEFAULT_SKYBOX_COLOR)
@@ -88,7 +81,14 @@ namespace MFramework
 
   void GraphicsSystem::Init(HWND hWnd, bool isDebugMode)
   {
+    // Debug version assertion
     assert(hWnd != nullptr);
+
+    // Release version null check
+    if (hWnd == nullptr)
+    {
+      terminate();
+    }
 
     HRESULT result = S_OK;
 
@@ -114,9 +114,11 @@ namespace MFramework
 
       RECT wndRect;
       GetClientRect(hWnd, &wndRect);
-      const float wndWidth = static_cast<float>(wndRect.right - wndRect.left);
-      const float wndHeight = static_cast<float>(wndRect.bottom - wndRect.top);
-      const float wndAspect = wndWidth / wndHeight;
+      const LONG wndWidthL = wndRect.right - wndRect.left;
+      const LONG wndHeightL = wndRect.bottom - wndRect.top;
+      const float wndWidthF = static_cast<float>(wndWidthL);
+      const float wndHeightF = static_cast<float>(wndHeightL);
+      const float wndAspect = wndWidthF / wndHeightF;
 
       // DX12初期化
       m_dxgiFactory.Init();
@@ -145,198 +147,15 @@ namespace MFramework
 
       m_fence.Init(m_device.Get());
 
-      #pragma region need refactoring
-      // テクスチャ
-      // WICテクスチャのロード
-      DirectX::TexMetadata metadata = {};
-      DirectX::ScratchImage scratchImg = {};
-      // テクスチャバッファー作成
-      {
-
-        result = DirectX::LoadFromWICFile(
-                                          L"Assets/Images/textest.png",    // ファイルパス
-                                          DirectX::WIC_FLAGS_NONE,         // どのようにロードするかを示すフラグ
-                                          &metadata,                       // メタデータ(DirectX::TexMetadata)を受け取るためのポインター
-                                          scratchImg                       // 実際のデータが入っているオブジェクト
-                                        ); 
-        assert(SUCCEEDED(result));
-
-        const DirectX::Image* img = scratchImg.GetImage(0, 0, 0);  // 生のデータ抽出
-
-        // 中間バッファーとしてのアップロードヒープ設定
-        D3D12_HEAP_PROPERTIES uploadHeapProp = {};
-
-        // マップ可能にするため、UPLOADにする
-        uploadHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-        // アップロード用に使用すること前提なのでUNKNOWNでよい
-        uploadHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-        uploadHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-
-        // 単一アダプターのため 0
-        uploadHeapProp.CreationNodeMask = 0;
-        uploadHeapProp.VisibleNodeMask = 0;
-
-        D3D12_RESOURCE_DESC resDesc = {};
-
-        // 単なるデータの塊なのでUNKNOWN
-        resDesc.Format = DXGI_FORMAT_UNKNOWN;
-        // 単なるバッファーとして指定
-        resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-
-        // rowPitchが変わったためバッファーのサイズも変更しなければならない
-        // アラインメントされたサイズ*高さとする必要がある
-        resDesc.Width = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) * img->height;    // データサイズ
-        resDesc.Height = 1;
-        resDesc.DepthOrArraySize = 1;
-        resDesc.MipLevels = 1;
-
-        resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;  // 連続したデータ
-        resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;         // 特にフラグなし
-
-        resDesc.SampleDesc.Count = 1; //通常テクスチャなのでアンチエイリアシングしない
-        resDesc.SampleDesc.Quality = 0;
-
-        // 中間バッファー作成
-        result = m_device->CreateCommittedResource(
-                                                  &uploadHeapProp,
-                                                  D3D12_HEAP_FLAG_NONE, //特にフラグなし
-                                                  &resDesc,
-                                                  D3D12_RESOURCE_STATE_GENERIC_READ,    // CPUから書き込み可能だが、GPUから見ると読み取り専用
-                                                  nullptr,
-                                                  IID_PPV_ARGS(m_temp_uploadBuffer.ReleaseAndGetAddressOf())
-                                                );     
-
-        assert(SUCCEEDED(result));
-
-        // テクスチャのためのヒープ設定
-        D3D12_HEAP_PROPERTIES texHeapProp = {};
-
-        texHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT; // テクスチャ用
-        texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-        texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-        // 単一アダプターのため 0
-        texHeapProp.CreationNodeMask = 0;
-        texHeapProp.VisibleNodeMask = 0;
-
-        // リソース設定 (変数使いまわし)
-        resDesc.Format = metadata.format;
-        resDesc.Width = static_cast<UINT64>(metadata.width);
-        resDesc.Height = static_cast<UINT>(metadata.height);
-        resDesc.DepthOrArraySize = static_cast<UINT16>(metadata.arraySize);    // 2D配列でもないので1
-        resDesc.MipLevels = static_cast<UINT16>(metadata.mipLevels);           // ミップマップしないためミップ数は1つ
-        resDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
-        resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-
-        result = m_device->CreateCommittedResource(
-                                                  &texHeapProp,
-                                                  D3D12_HEAP_FLAG_NONE,
-                                                  &resDesc,
-                                                  D3D12_RESOURCE_STATE_COPY_DEST, // コピー先
-                                                  nullptr,
-                                                  IID_PPV_ARGS(m_temp_texBuffer.ReleaseAndGetAddressOf())
-                                                );
-
-        assert(SUCCEEDED(result));
-
-        // アップロードリソースへのマップ
-        UINT8* mapforImg = nullptr; // img->pixelsと同じ型にする
-        result = m_temp_uploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapforImg));
-
-        // 元データをコピーする際に、元データのRowPitchとバッファーのRowPitchが合わないため、
-        // 一行ごとにコピーして行頭が合うようにする
-        UINT8* srcAddress = img->pixels;
-
-        size_t rowPitch = AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-
-        for (int y = 0; y < img->height; ++y)
-        {
-          std::copy_n(srcAddress, rowPitch, mapforImg);
-
-          // 一行ごとの辻褄を合わせる
-          srcAddress += img->rowPitch;
-          mapforImg += rowPitch;
-        }
-
-        m_temp_uploadBuffer->Unmap(0, nullptr); //アンマップ
-
-        D3D12_TEXTURE_COPY_LOCATION src = {};
-
-        // コピー元(アップロード側)設定
-        src.pResource = m_temp_uploadBuffer.Get();   // 中間バッファー
-        // D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINTの場合、pResourceはバッファーリソースを指す必要がある
-        // D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEXの場合、pResourceはテクスチャリソースを指す必要がある
-        src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;  // フットプリント指定
-        src.PlacedFootprint.Offset = 0;
-        src.PlacedFootprint.Footprint.Width = static_cast<UINT>(metadata.width);
-        src.PlacedFootprint.Footprint.Height = static_cast<UINT>(metadata.height);
-        src.PlacedFootprint.Footprint.Depth = static_cast<UINT>(metadata.depth);
-        // ここが重要
-        // RowPitchが256の倍数でないとCopyTextureRegionの実行は失敗する
-        // 256アライメントにする
-        src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(AlignmentedSize(img->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));
-        src.PlacedFootprint.Footprint.Format = img->format;
-
-        D3D12_TEXTURE_COPY_LOCATION dst = {};
-
-        // コピー先設定
-        dst.pResource = m_temp_texBuffer.Get();
-        dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-        dst.SubresourceIndex = 0;
-
-        {
-          m_cmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
-
-          D3D12_RESOURCE_BARRIER barrierDesc = {};
-
-          barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-          barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-          barrierDesc.Transition.pResource = m_temp_texBuffer.Get();
-          barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-          barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;    // ここが重要
-          barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE; // ここが重要
-
-          m_cmdList->ResourceBarrier(1, &barrierDesc);
-          m_cmdList->Close();
-
-          // コマンドリストの実行
-          ID3D12CommandList* cmdLists[] = { m_cmdList.Get() };
-          m_cmdQueue.Execute(1, cmdLists);
-
-          m_fence.Wait(m_cmdQueue.Get());
-
-          m_cmdList.Reset(0, nullptr);
-        }
-
-      }
-      #pragma endregion needrefactoring
-
       // TODO magic number
       m_texHeap.Init(m_device.Get(), D3D12DescHeapType::CBV_SRV_UAV, 2);
 
-        // シェーダーリソースビューを作成
-      D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-      srvDesc.Format = metadata.format;                                           // RGBA(0.0f~1.0fに正規化)
-      srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;                      // 2Dテクスチャ
-      srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING; // データのRGBAをどのようにマッピングするかということを指定するためのもの
-                                                                                  // 画像の情報がそのままRGBAなど「指定されたフォーマットに、
-                                                                                  // データどおりの順序で割り当てられている」ことを表しています。
-      srvDesc.Texture2D.MipLevels = 1;                                            // ミップマップは使用しないので１
-
-      // 三つ目の引数はディスクリプタヒープのどこにこのビューを配置するかを指定するためのもの
-      // 複数のテクスチャビューがある場合、取得したハンドルからオフセットを指定する必要がある
-      
-      MFramework::DescriptorHandle texHeapHandle = m_texHeap.GetHandle(0);
-
-      if (texHeapHandle.HasCPUHandle())
-      {
-        m_device->CreateShaderResourceView(
-                                            m_temp_texBuffer.Get(),                                          // ビューと関連付けるバッファー
-                                            &srvDesc,                                           // 先ほど設定したテクスチャ設定情報
-                                            texHeapHandle.CPUHandle                           // ヒープのどこに割り当てるか
-                                          );
-      }
+      assert(m_texture.Create( m_device.Get(),
+                              &m_cmdList,
+                              m_cmdQueue.Get(),
+                              m_texHeap.GetHandle(0),
+                              L"textest.png"
+                            ));
 
       // 定数バッファー作成
       worldMatrix = DirectX::XMMatrixRotationY(DirectX::XM_PIDIV4);
@@ -424,8 +243,8 @@ namespace MFramework
       m_pipelineState.Init(m_device.Get(), m_rootSig.Get(), &m_vertShader, &m_pixelShader, nullptr);
 
       // ビューポートを作成
-      m_viewPort.Width = wndWidth;
-      m_viewPort.Height = wndHeight;
+      m_viewPort.Width = wndWidthF;
+      m_viewPort.Height = wndHeightF;
       m_viewPort.TopLeftX = 0;
       m_viewPort.TopLeftY = 0;
       m_viewPort.MaxDepth = 1.0f;
@@ -436,8 +255,8 @@ namespace MFramework
 
       m_scissorRect.top = 0;
       m_scissorRect.left = 0;
-      m_scissorRect.right = m_scissorRect.left + static_cast<LONG>(wndWidth);
-      m_scissorRect.bottom = m_scissorRect.top + static_cast<LONG>(wndHeight);
+      m_scissorRect.right = m_scissorRect.left + wndWidthL;
+      m_scissorRect.bottom = m_scissorRect.top + wndHeightL;
       
     }
   }
@@ -507,14 +326,10 @@ namespace MFramework
     // パイプラインステートを設定
     m_cmdList->SetPipelineState(m_pipelineState.Get()); 
 
-    auto texHeapHandle = m_texHeap.GetHandle(0);
-    if (texHeapHandle.HasGPUHandle())
-    {
-      m_cmdList->SetGraphicsRootDescriptorTable(
+    m_cmdList->SetGraphicsRootDescriptorTable(
                                                 0,           // ルートパラメーターインデックス 
-                                                texHeapHandle.GPUHandle   // ヒープアドレス
+                                                m_texture.GetGPUHandle()   // ヒープアドレス
                                               );
-    }
   
     // 頂点バッファーを設定
     // 第一引数:スロット番号
@@ -599,11 +414,7 @@ namespace MFramework
     m_pixelShader.Dispose();
     m_rootSig.Dispose();
     m_pipelineState.Dispose();
-
-    // TODO
-    m_temp_texBuffer.Reset();
-    m_temp_uploadBuffer.Reset();
-
+    m_texture.Dispose();
     m_device.Dispose();
     
     if (m_debugDevice.Get() != nullptr)

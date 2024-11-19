@@ -6,6 +6,7 @@ Author : MAI ZHICONG
 Description : DirectX12 Graphics System Include List (Graphics API: DirectX12)
 
 Update History: 2024/11/12 Create
+                2024/11/19 Add include Texture.h
 
 Version : alpha_1.0.0
 
@@ -43,5 +44,6 @@ Encoding : UTF-8
 #include <Graphics_DX12/ConstantBuffer.h>
 #include <Graphics_DX12/RenderTarget.h>
 #include <Graphics_DX12/ShaderResBlob.h>
+#include <Graphics_DX12/Texture.h>
 
 #endif

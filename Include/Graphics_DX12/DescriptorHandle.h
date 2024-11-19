@@ -19,19 +19,23 @@ Encoding : UTF-8
 #define M_DX12_DESC_HANDLE
 
 #include <d3d12.h>
+#include <Base-Def-Macro.h>
 
 namespace MFramework
 {
   inline namespace MGraphics_DX12
   {
+    ALIAS(D3D12_CPU_DESCRIPTOR_HANDLE, CPUDescHandle);
+    ALIAS(D3D12_GPU_DESCRIPTOR_HANDLE, GPUDescHandle);
+    
     class DescriptorHandle
     {
       public:
         DescriptorHandle();
         ~DescriptorHandle();
       public:
-        D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle;
-        D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle;
+        CPUDescHandle CPUHandle;
+        GPUDescHandle GPUHandle;
 
       public:
         bool HasCPUHandle(void) const;

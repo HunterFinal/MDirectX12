@@ -22,6 +22,13 @@ Encoding : UTF-8
 namespace
 {
   constexpr int DESTINATION_PATH_BUFFER_LENGTH = 520;
+  const wchar_t FILE_ROOT_PATH[][520] =
+  {
+    L"",
+    L"%s\\%s",
+    L"%s\\..\\..\\%s",
+    L"%s\\..\\..\\Assets\\Images\\%s",
+  };
 }
 
 namespace MFramework
@@ -45,18 +52,43 @@ namespace MFramework
 
     wchar_t destPath[DESTINATION_PATH_BUFFER_LENGTH] = {};
 
-    wcscpy_s(destPath, fileName);
-    if (PathFileExists(destPath))
+    for (const auto rootPath : FILE_ROOT_PATH)
     {
-      filePath = destPath;
-      return true;
+      swprintf_s(destPath, rootPath, exePath, fileName);
+      if (PathFileExists(destPath))
+      {
+        filePath = destPath;
+        return true;
+      }
     }
+
+    // wcscpy_s(destPath, fileName);
+    // if (PathFileExists(destPath))
+    // {
+    //   filePath = destPath;
+    //   return true;
+    // }
     
-    swprintf_s(destPath, L"%s\\%s", exePath, fileName);
-    if (PathFileExists(destPath) == TRUE) {
-      filePath = destPath;
-      return true;
-    }
+    // swprintf_s(destPath, L"%s\\%s", exePath, fileName);
+    // if (PathFileExists(destPath))
+    // {
+    //   filePath = destPath;
+    //   return true;
+    // }
+
+    // swprintf_s(destPath, L"%s\\..\\..\\%s", exePath, fileName);
+    // if (PathFileExists(destPath)) 
+    // {
+    //   filePath = destPath;
+    //   return true;
+    // }
+
+    // swprintf_s(destPath, L"%s\\..\\..\\Assets\\Images\\%s", exePath, fileName);
+    // if (PathFileExists(destPath)) 
+    // {
+    //   filePath = destPath;
+    //   return true;
+    // }
 
     return false;
 
