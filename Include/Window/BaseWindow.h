@@ -19,8 +19,7 @@ Version : alpha_1.0.0
 #include <Windows.h>
 #include <string>
 
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
+#include <ClassBaseInc.h>
 #include <Interfaces/IWindowInfo.h>
 
 namespace MWindow

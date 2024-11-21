@@ -1,24 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Header File">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Header File\Window">
-      <UniqueIdentifier>{c4356a64-89f3-411f-9981-489809bdb44a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shader">
       <UniqueIdentifier>{af005048-32eb-4eac-8406-cc6975671ac9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Shader\HLSL">
       <UniqueIdentifier>{05787bac-5b0c-4784-a80d-23b8d3949f6c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header File\Debugger">
-      <UniqueIdentifier>{8ca9b578-3f11-4715-8c4d-4d6d9a231a66}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header File\Graphics_DX12">
-      <UniqueIdentifier>{dc5faf8c-4f09-414f-b088-f1f2713fdab5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Obsolete Code">
       <UniqueIdentifier>{d7a9d556-761b-406b-9b64-e93bc6448399}</UniqueIdentifier>
@@ -35,15 +22,34 @@
     <Filter Include="Source File\Graphics_DX12">
       <UniqueIdentifier>{a30a37cb-2ba8-483c-9b68-83a78a78029d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header File\Utilities">
-      <UniqueIdentifier>{fbea6194-54ef-49a5-bb35-84408c48cc77}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Entry Point">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
     <Filter Include="Source File\Utilities">
       <UniqueIdentifier>{806ecd71-66f9-408c-a0fd-437af1cff4d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source File\CoreModule">
+      <UniqueIdentifier>{8a08baf1-e286-4bcf-ae69-a4358fdf4159}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header File">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header File\Window">
+      <UniqueIdentifier>{c4356a64-89f3-411f-9981-489809bdb44a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header File\Debugger">
+      <UniqueIdentifier>{8ca9b578-3f11-4715-8c4d-4d6d9a231a66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header File\Graphics_DX12">
+      <UniqueIdentifier>{dc5faf8c-4f09-414f-b088-f1f2713fdab5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header File\Utilities">
+      <UniqueIdentifier>{fbea6194-54ef-49a5-bb35-84408c48cc77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header File\CoreModule">
+      <UniqueIdentifier>{13048c5c-c332-474d-b68b-5cd09c3c2b07}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -113,14 +119,14 @@
     <ClCompile Include="Source\Graphics_DX12\GraphicsSystem.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Source\CoreModule\Color.cpp">
-      <Filter>Entry Point</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Graphics_DX12\Texture.cpp">
       <Filter>Source File\Graphics_DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\Utilities\D3D12EasyUtil.cpp">
       <Filter>Source File\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CoreModule\Color.cpp">
+      <Filter>Source File\CoreModule</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -209,6 +215,24 @@
       <Filter>Header File\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="Include\Utilities\FileUtil.h">
+      <Filter>Header File\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\CoreModule\Color.h">
+      <Filter>Header File\CoreModule</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\CoreModule\GameDimensionInfo.h">
+      <Filter>Header File\CoreModule</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\CoreModule\Transform.h">
+      <Filter>Header File\CoreModule</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\CoreModule\Vector2.h">
+      <Filter>Header File\CoreModule</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\CoreModule\Vector3.h">
+      <Filter>Header File\CoreModule</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Utilities\MPool.hpp">
       <Filter>Header File\Utilities</Filter>
     </ClInclude>
   </ItemGroup>

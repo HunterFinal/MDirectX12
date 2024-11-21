@@ -172,6 +172,11 @@
     <ClCompile Include="Source\Window\BaseWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Include\CoreModule\Color.h" />
+    <ClInclude Include="Include\CoreModule\GameDimensionInfo.h" />
+    <ClInclude Include="Include\CoreModule\Transform.h" />
+    <ClInclude Include="Include\CoreModule\Vector2.h" />
+    <ClInclude Include="Include\CoreModule\Vector3.h" />
     <ClInclude Include="Include\Debugger\Debug.h" />
     <ClInclude Include="Include\Debugger\DefaultLogger.h" />
     <ClInclude Include="Include\Debugger\ILogger.h" />
@@ -198,6 +203,7 @@
     <ClInclude Include="Include\Utilities\ComPtr.h" />
     <ClInclude Include="Include\Utilities\D3D12EasyUtil.h" />
     <ClInclude Include="Include\Utilities\FileUtil.h" />
+    <ClInclude Include="Include\Utilities\MPool.hpp" />
     <ClInclude Include="Include\Utilities\RandomGenerator.hpp" />
     <ClInclude Include="Include\Window\BaseWindow.h" />
     <ClInclude Include="Obsolete Code\ObsoleteCode.h" />

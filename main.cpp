@@ -35,6 +35,8 @@ Version : alpha_1.0.0
 #pragma endregion
 // end DX12 Graphics
 
+#include <MPool.hpp>
+
 #ifdef _DEBUG
 int main()
 #else
@@ -49,6 +51,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
         return -1;
     }
     MSG msg = {};
+
+    MFramework::Utility::Pool<int> t(10, sizeof(int));
 
     std::shared_ptr<IGraphics> g = std::make_shared<MFramework::GraphicsSystem>();
     g->Init(test.GetHWND(), true);
