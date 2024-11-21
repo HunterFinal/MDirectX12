@@ -18,13 +18,11 @@ Encoding : UTF-8
 #ifndef M_DX12_FENCE
 #define M_DX12_FENCE
 
+#include "GraphicsClassBaseInclude.h"
+
 struct ID3D12Device;
 struct ID3D12CommandQueue;
 struct ID3D12Fence;
-
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
 
 namespace MFramework
 {

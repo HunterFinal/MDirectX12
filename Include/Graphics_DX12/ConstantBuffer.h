@@ -18,10 +18,9 @@ Encoding : UTF-8
 #ifndef M_DX12_CONSTANT_BUFFER
 #define M_DX12_CONSTANT_BUFFER
 
+#include "GraphicsClassBaseInclude.h"
+
 #include <d3d12.h>
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
 #include <Graphics_DX12/DescriptorHandle.h>
 
 namespace MFramework

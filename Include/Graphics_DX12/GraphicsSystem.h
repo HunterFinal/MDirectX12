@@ -23,7 +23,6 @@ Encoding : UTF-8
 #include <Color.h>
 
 #include <Graphics_DX12/GraphicsInclude.h>
-#include <Class-Def-Macro.h>
 
 class IGraphics
 {

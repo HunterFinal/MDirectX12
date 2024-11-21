@@ -14,10 +14,10 @@ Encoding : UTF-8
 */
 #pragma once
 
-#ifndef M_CLASS_DEF_MACRO
-#define M_CLASS_DEF_MACRO
+#ifndef M_CLASS_MACRO_DEF
+#define M_CLASS_MACRO_DEF
 
-#include <Base-Def-Macro.h>
+#include <Base-Macro-Def.h>
 
 #define VIRTUAL(func) virtual func
 #define ABSTRACT(func) virtual func = 0

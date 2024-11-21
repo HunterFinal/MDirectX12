@@ -17,9 +17,8 @@ Encoding : UTF-8
 #ifndef M_DX12_DESCHEAP
 #define M_DX12_DESCHEAP
 
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
+#include "GraphicsClassBaseInclude.h"
+
 #include <Graphics_DX12/DescriptorHandle.h>
 
 enum class D3D12DescHeapType

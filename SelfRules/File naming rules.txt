@@ -1,0 +1,6 @@
+template class: use .hpp, not .h
+
+macro define file: XXX-XXX-Def.h(or exclude.h)
+
+
+

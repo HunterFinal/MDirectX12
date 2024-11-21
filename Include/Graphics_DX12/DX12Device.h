@@ -18,9 +18,7 @@ Encoding : UTF-8
 #ifndef M_DX12_DEVICE
 #define M_DX12_DEVICE
 
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
+#include "GraphicsClassBaseInclude.h"
 
 struct ID3D12Device;
 struct IDXGIFactory6;

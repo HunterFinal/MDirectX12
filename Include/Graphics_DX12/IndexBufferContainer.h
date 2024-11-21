@@ -18,11 +18,9 @@ Encoding : UTF-8
 #ifndef M_IDXBUFFER_CONTAINER
 #define M_IDXTBUFFER_CONTAINER
 
+#include "GraphicsClassBaseInclude.h"
 #include <d3d12.h>
 
-#include <ComPtr.h>
-#include <Interfaces/IDisposable.h>
-#include <Class-Def-Macro.h>
 
 namespace MFramework
 {

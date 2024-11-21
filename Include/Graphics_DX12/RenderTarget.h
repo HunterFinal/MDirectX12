@@ -18,9 +18,7 @@ Encoding : UTF-8
 #ifndef M_DX12_RENDERTARGET
 #define M_DX12_RENDERTARGET
 
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
+#include "GraphicsClassBaseInclude.h"
 
 namespace MFramework
 {
@@ -57,7 +55,6 @@ namespace MFramework
     {
       return m_renderTarget.Get();
     }
-
   }
 }
 

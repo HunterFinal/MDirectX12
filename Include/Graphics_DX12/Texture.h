@@ -17,9 +17,7 @@ Encoding : UTF-8
 #ifndef M_TEXTURE
 #define M_TEXTURE
 
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
+#include "GraphicsClassBaseInclude.h"
 #include <Graphics_DX12/DescriptorHandle.h>
 
 struct ID3D12Resource;

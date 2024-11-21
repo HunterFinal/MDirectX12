@@ -18,9 +18,7 @@ Encoding : UTF-8
 #ifndef M_DX12_DXGIFACTORY
 #define M_DX12_DXGIFACTORY
 
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
+#include "GraphicsClassBaseInclude.h"
 
 struct IDXGIFactory6;
 

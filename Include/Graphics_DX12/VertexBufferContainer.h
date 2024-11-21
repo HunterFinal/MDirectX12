@@ -19,10 +19,7 @@ Encoding : UTF-8
 
 #include <d3d12.h>
 
-#include <ComPtr.h>
-#include <Interfaces/IDisposable.h>
-#include <Class-Def-Macro.h>
-
+#include "GraphicsClassBaseInclude.h"
 
 namespace MFramework
 {

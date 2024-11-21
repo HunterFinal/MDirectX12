@@ -18,9 +18,7 @@ Encoding : UTF-8
 #ifndef M_DX12_SHADER_RES
 #define M_DX12_SHADER_RES
 
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
+#include "GraphicsClassBaseInclude.h"
 
 struct ID3D10Blob;
 

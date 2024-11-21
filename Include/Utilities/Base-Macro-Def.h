@@ -14,8 +14,8 @@ Encoding : UTF-8
 */
 #pragma once
 
-#ifndef M_BASE_DEF_MACRO
-#define M_BASE_DEF_MACRO
+#ifndef M_BASE_MACRO_DEF
+#define M_BASE_MACRO_DEF
 
 
 #if defined(__clang__) || defined(__GNUC__)

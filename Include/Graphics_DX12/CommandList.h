@@ -18,10 +18,8 @@ Encoding : UTF-8
 #ifndef M_DX12_COMMANDLIST
 #define M_DX12_COMMANDLIST
 
-#include <ComPtr.h>
+#include "GraphicsClassBaseInclude.h"
 #include <vector>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
 
 struct ID3D12Device;
 struct ID3D12GraphicsCommandList;

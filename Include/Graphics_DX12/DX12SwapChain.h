@@ -18,9 +18,7 @@ Encoding : UTF-8
 #ifndef M_DX12_SWAPCHAIN
 #define M_DX12_SWAPCHAIN
 
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
+#include "GraphicsClassBaseInclude.h"
 
 struct IDXGIFactory6;
 struct ID3D12CommandQueue;

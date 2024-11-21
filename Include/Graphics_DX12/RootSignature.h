@@ -18,9 +18,7 @@ Encoding : UTF-8
 #ifndef M_DX12_ROOTSIGNATURE
 #define M_DX12_ROOTSIGNATURE
 
-#include <ComPtr.h>
-#include <Class-Def-Macro.h>
-#include <Interfaces/IDisposable.h>
+#include "GraphicsClassBaseInclude.h"
 
 struct ID3D12Device;
 struct ID3D12RootSignature;
