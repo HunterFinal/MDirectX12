@@ -32,8 +32,8 @@ namespace MFramework
     template<typename Value_Type>
     class MPoolItem
     {
-        public:
-      Value_Type* ptr;
+      public:
+        Value_Type* ptr;
     };
   }
 }
